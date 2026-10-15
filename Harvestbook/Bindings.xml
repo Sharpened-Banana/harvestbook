@@ -1,8 +1,8 @@
 <Bindings>
-  <Binding name="HARVESTBOOK_TOGGLE" header="HARVESTBOOK">
+  <Binding name="HARVESTBOOK_TOGGLE" header="HARVESTBOOK" category="ADDONS">
     if Harvestbook and Harvestbook.UI then Harvestbook.UI:Toggle() end
   </Binding>
-  <Binding name="HARVESTBOOK_COMPANION">
+  <Binding name="HARVESTBOOK_COMPANION" category="ADDONS">
     if Harvestbook and Harvestbook.UI then Harvestbook.UI:ToggleCompanion() end
   </Binding>
 </Bindings>
