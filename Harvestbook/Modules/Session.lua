@@ -165,11 +165,41 @@ local function archive(s)
   return true
 end
 
+-- Re-resolves stale cached prices (older than an hour) for the current
+-- session's items and the last archived session's (what is likely to be
+-- gathered again). Deferred so it never runs inside the gather handler and so
+-- TSM / Auctionator have initialised after login.
+local STALE_PRICE_AGE = 3600
+local STALE_PRICE_DELAY = 5
+
+local function addItems(list, seen, s)
+  for key, it in pairs(s and s.items or {}) do
+    if not seen[key] and it.itemID then
+      seen[key] = true
+      list[#list + 1] = { itemID = it.itemID, quality = it.quality, link = it.link }
+    end
+  end
+end
+
+local function refreshStalePrices()
+  if not Session:IsEnabled() then return end
+  local list, seen = {}, {}
+  addItems(list, seen, cur())
+  local history = HB.db.global.sessions
+  addItems(list, seen, history[#history])
+  if #list > 0 then HB.Pricing:RefreshStale(list, STALE_PRICE_AGE) end
+end
+
+local function scheduleStalePriceRefresh()
+  C_Timer.After(STALE_PRICE_DELAY, safe(refreshStalePrices))
+end
+
 local function startNew()
   local s = SessionMath.New(time())
   HB.char.current = s
   wipe(gatherLog)
   changed("running", s)
+  scheduleStalePriceRefresh()
   return s
 end
 
@@ -758,6 +788,7 @@ function Session:OnEnable()
   updateTicker()
   updateStatus()
   refreshAll()
+  scheduleStalePriceRefresh()
 end
 
 function Session:OnDisable()
