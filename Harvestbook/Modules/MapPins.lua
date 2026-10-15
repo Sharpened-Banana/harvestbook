@@ -297,9 +297,23 @@ end
 ---------------------------------------------------------------------------
 
 local worldHooked
+local profileOwner = {} -- unique AceDB callback owner (HB and HB.UI register their own)
+
+-- Map Pins settings live in the profile; a profile switch/copy/reset that
+-- keeps the module enabled must redraw with the new settings. (Init.lua's
+-- ApplyModuleStates only enables/disables modules.)
+local function onProfileChanged()
+  if MapPins:IsEnabled() then HB:SafeCall("MapPins", MapPins.Rebuild, MapPins) end
+end
 
 function MapPins:OnEnable()
   if not HBDPins then return end
+  if not profileOwner.registered then
+    profileOwner.registered = true
+    HB.db.RegisterCallback(profileOwner, "OnProfileChanged", onProfileChanged)
+    HB.db.RegisterCallback(profileOwner, "OnProfileCopied", onProfileChanged)
+    HB.db.RegisterCallback(profileOwner, "OnProfileReset", onProfileChanged)
+  end
   HB:Listen(self, "HB_NODELOG_CHANGED", self.OnNodeLogChanged)
   local function onZone() HB:SafeCall("MapPins", syncMinimap) end
   self:RegisterEvent("ZONE_CHANGED_NEW_AREA", onZone)

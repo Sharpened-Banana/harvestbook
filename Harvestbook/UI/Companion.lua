@@ -7,7 +7,8 @@ local ADDON, ns = ...
 --
 -- Visibility: profile.companion.shown is the user's wish (toggle, X, Window
 -- page). With autoShow, the next HB_NODE_GATHERED sets it again. With
--- hideNoSession, the frame also stays hidden while no session exists.
+-- hideNoSession, the frame also stays hidden while no session exists. It is
+-- always hidden while no module has registered a tab (e.g. Session disabled).
 
 local HB = ns.HB
 local Theme = ns.Theme
@@ -27,6 +28,7 @@ local stateText = ""
 local sessionActive = false
 local throttle = {}
 local frame           -- HarvestbookCompanion once built
+local updateVisibility -- defined with the frame
 
 local function db()
   return HB.db.profile.companion
@@ -156,6 +158,7 @@ function UI:RegisterCompanionTab(def)
     refresh = def.refresh,
   }
   self:RefreshCompanionTabs()
+  updateVisibility()
   self:RefreshPage("window")
 end
 
@@ -168,6 +171,7 @@ function UI:UnregisterCompanionTab(id)
   end
   tabs[id] = nil
   self:RefreshCompanionTabs()
+  updateVisibility()
   self:RefreshPage("window")
 end
 
@@ -258,10 +262,10 @@ end
 
 local function wantVisible()
   local c = db()
-  return c.shown and (not c.hideNoSession or sessionActive)
+  return c.shown and next(tabs) ~= nil and (not c.hideNoSession or sessionActive)
 end
 
-local function updateVisibility()
+updateVisibility = function()
   if wantVisible() then
     if not frame then buildFrame() end
     frame:Show()
@@ -279,6 +283,8 @@ function UI:SetCompanionShown(on, quiet)
   db().shown = on and true or false
   if on and not quiet and db().hideNoSession and not sessionActive then
     HB:Msg("the companion is hidden while no session is active (see the Window page).")
+  elseif on and not quiet and next(tabs) == nil then
+    HB:Msg("the companion has no tabs while the Session module is disabled.")
   end
   updateVisibility()
   self:RefreshPage("window")

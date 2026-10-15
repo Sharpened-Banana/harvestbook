@@ -766,6 +766,9 @@ function Session:OnEnable()
   HB:Listen(self, "HB_NODE_GATHERED", self.OnGather)
   HB:Listen(self, "HB_PRICES_UPDATED", refreshAll)
   HB:Listen(self, "HB_RARE_FOUND", self.OnRareFound)
+  HB:Listen(self, "HB_MODULE_TOGGLED", function(_, name)
+    if name == "Goals" then HB.UI:RefreshCompanion() end -- goal bars
+  end)
 
   onEvent("PLAYER_ENTERING_WORLD", function()
     setCondition("instance", IsInInstance() and true or false)

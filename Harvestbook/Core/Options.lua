@@ -258,7 +258,10 @@ local function resetAllData()
   end
   for k, v in pairs(HB.defaults.global) do g[k] = deepcopy(v) end
   HB.db:ResetProfile()
-  if HB.char then HB.char.current = nil end
+  if HB.char then
+    HB.char.current = nil
+    HB.char.goalsReached = nil
+  end
   StaticPopup_Show("HARVESTBOOK_RELOAD")
 end
 
