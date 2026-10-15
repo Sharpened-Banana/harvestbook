@@ -2,8 +2,9 @@ local ADDON, ns = ...
 
 -- Price resolution + cache (spec §6). Values are integer copper.
 -- Cache: global.prices[itemKey] = { value = copper, source = name, time = unix }.
--- Cached prices are reused without expiry; only Refresh/SetOverride replace them,
--- so a known price is never re-queried automatically during gathering.
+-- Cached prices are reused by Get without expiry; Refresh, RefreshStale
+-- (login / session start, entries older than an hour) and SetOverride
+-- replace them, so a known price is never re-queried during gathering.
 -- Unpriced items are not cached and are re-resolved on each Get.
 
 local HB = ns.HB
@@ -79,14 +80,30 @@ function Pricing:Sources()
   return list
 end
 
+-- True when a source ranked above `winner` (other than the manual override,
+-- whose nil just means "no override") is loaded but gave no price, e.g. TSM
+-- or Auctionator still initialising. Such a result is only provisional.
+local function provisional(sources, winner)
+  for _, src in ipairs(sources) do
+    if src.name == winner then return false end
+    if src.name ~= "override" then return true end
+  end
+  return false
+end
+
 -- Only real prices are cached; an unpriced result (0, "none") clears any
 -- stale entry so the item is re-resolved on the next Get (e.g. once the
--- vendor price is available from the item cache).
+-- vendor price is available from the item cache). A provisional price is
+-- returned but not cached (and leaves any existing entry alone), so the
+-- better source is asked again next time.
 local function resolveAndCache(self, itemID, quality, link)
-  local copper, source = PriceChain.Resolve(itemID, quality, link, self:Sources())
+  local sources = self:Sources()
+  local copper, source = PriceChain.Resolve(itemID, quality, link, sources)
   local key = ItemKey(itemID, quality)
   if copper > 0 then
-    HB.db.global.prices[key] = { value = copper, source = source, time = time() }
+    if not provisional(sources, source) then
+      HB.db.global.prices[key] = { value = copper, source = source, time = time() }
+    end
   else
     HB.db.global.prices[key] = nil
   end
@@ -116,6 +133,29 @@ function Pricing:Refresh(itemList)
     end
   end
   HB:SendMessage("HB_PRICES_UPDATED")
+end
+
+-- Re-resolves cached prices older than maxAge seconds (default 3600) for the
+-- given items; sends HB_PRICES_UPDATED only if a cached value or source
+-- changed. Never called from the gather path (spec §6).
+function Pricing:RefreshStale(itemList, maxAge)
+  maxAge = maxAge or 3600
+  local prices, now, changed = HB.db.global.prices, time(), false
+  for _, e in ipairs(itemList or {}) do
+    local itemID = e.itemID or e[1]
+    if itemID then
+      local quality = e.quality or e[2]
+      local key = ItemKey(itemID, quality)
+      local old = prices[key]
+      if old and now - (old.time or 0) > maxAge then
+        resolveAndCache(self, itemID, quality, e.link or e[3])
+        local new = prices[key]
+        if not new or new.value ~= old.value or new.source ~= old.source then changed = true end
+      end
+    end
+  end
+  if changed then HB:SendMessage("HB_PRICES_UPDATED") end
+  return changed
 end
 
 -- priceFn(itemID, quality, link) -> copper, source (SessionMath signature).
