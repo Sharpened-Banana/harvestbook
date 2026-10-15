@@ -183,11 +183,11 @@ end
 ---------------------------------------------------------------------------
 
 local NODE_COLUMNS = {
-  { key = "name", title = "Node", width = 190, align = "LEFT" },
-  { key = "count", title = "Count", width = 64, align = "RIGHT" },
-  { key = "share", title = "Share", width = 64, align = "RIGHT" },
-  { key = "avgItems", title = "Avg items", width = 84, align = "RIGHT" },
-  { key = "value", title = "Value/node", width = 110, align = "RIGHT" },
+  { key = "name", title = "Node", width = 140, align = "LEFT" },
+  { key = "count", title = "Count", width = 50, align = "RIGHT" },
+  { key = "share", title = "Share", width = 56, align = "RIGHT" },
+  { key = "avgItems", title = "Avg items", width = 70, align = "RIGHT" },
+  { key = "value", title = "Value/node", width = 100, align = "RIGHT" },
 }
 
 local ITEM_COLUMNS = {

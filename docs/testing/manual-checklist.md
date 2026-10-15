@@ -104,4 +104,5 @@ Every "Verify:" item below, by section (the original entries stay in their secti
 - [ ] Toggle each module off/on without `/reload`; dependents grey out and auto-disable (e.g. Node Log off -> Map Pins and Best Spot off)
 - [ ] With all modules off except Session the box shows Session, Window, Settings only
 - [ ] Settings export string -> import on a second character restores settings
+- [ ] Resize to 700×500 and visit every page — no clipped columns or text past the window edge.
 - [ ] Angler's TackleBox installed alongside -> no conflicts, no shared globals (`/dump Harvestbook` only)
