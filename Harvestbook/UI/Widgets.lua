@@ -458,23 +458,104 @@ function W.ProgressBar(parent)
 end
 
 ---------------------------------------------------------------------------
--- Heading(parent, text) -> fs
---   Gold heading font with a 1 px gold underline (fs.underline) that runs
---   to the parent's right edge (12 px inset).
+-- Heading(parent, text) -> heading (Frame)
+--   A wrapper frame (height = text height + 6) holding the gold heading text
+--   and a 1 px gold underline along its bottom edge. The caller anchors it
+--   and gives it a width, e.g. TOPLEFT + TOPRIGHT of the content area; the
+--   underline spans the full width. Hide/Show the wrapper to hide both.
+--   heading:SetText(str), heading.text (FontString), heading.underline.
 ---------------------------------------------------------------------------
 function W.Heading(parent, text)
-  local fs = parent:CreateFontString(nil, "OVERLAY", "HarvestbookFontHeading")
+  local heading = CreateFrame("Frame", nil, parent)
+  local fs = heading:CreateFontString(nil, "OVERLAY", "HarvestbookFontHeading")
+  fs:SetPoint("TOPLEFT", heading, "TOPLEFT", 0, 0)
+  fs:SetPoint("TOPRIGHT", heading, "TOPRIGHT", 0, 0)
   fs:SetJustifyH("LEFT")
-  fs:SetText(text or "")
-  local line = parent:CreateTexture(nil, "ARTWORK")
+  fs:SetWordWrap(false)
+  heading.text = fs
+
+  local line = heading:CreateTexture(nil, "ARTWORK")
   line:SetTexture(WHITE)
   line:SetVertexColor(Theme:Color("gold"))
   line:SetAlpha(0.7)
   line:SetHeight(1)
-  line:SetPoint("TOPLEFT", fs, "BOTTOMLEFT", 0, -4)
-  line:SetPoint("RIGHT", parent, "RIGHT", -12, 0)
-  fs.underline = line
-  return fs
+  line:SetPoint("BOTTOMLEFT", heading, "BOTTOMLEFT", 0, 0)
+  line:SetPoint("BOTTOMRIGHT", heading, "BOTTOMRIGHT", 0, 0)
+  heading.underline = line
+
+  function heading:SetText(str)
+    self.text:SetText(str or "")
+    local _, size = self.text:GetFont()
+    local h = math.max(self.text:GetStringHeight() or 0, size or 16)
+    self:SetHeight(math.ceil(h) + 6)
+  end
+
+  heading:SetText(text)
+  return heading
+end
+
+---------------------------------------------------------------------------
+-- Dropdown(parent, width, options, get, set) -> dd
+--   options: list of { value = any, text = string }, or a function returning
+--   that list (evaluated whenever the menu is built/opened).
+--   get() -> current value; set(value) on selection. dd:Refresh() re-reads
+--   get() and updates the shown text.
+--   Uses the Retail menu API (DropdownButton + WowStyle1DropdownTemplate);
+--   if unavailable, falls back to a red button that cycles the options.
+---------------------------------------------------------------------------
+local function resolveOptions(options)
+  if type(options) == "function" then return options() or {} end
+  return options or {}
+end
+
+local function currentText(options, get)
+  local cur = get and get()
+  for _, opt in ipairs(resolveOptions(options)) do
+    if opt.value == cur then return opt.text end
+  end
+  return ""
+end
+
+function W.Dropdown(parent, width, options, get, set)
+  local ok, dd = pcall(CreateFrame, "DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
+  if ok and dd and dd.SetupMenu then
+    dd:SetWidth(width or 160)
+    dd:SetupMenu(function(owner, rootDescription)
+      for _, opt in ipairs(resolveOptions(options)) do
+        rootDescription:CreateRadio(opt.text,
+          function(value) return get and get() == value end,
+          function(value)
+            if set then set(value) end
+          end,
+          opt.value)
+      end
+    end)
+    function dd:Refresh()
+      if self.GenerateMenu then self:GenerateMenu() end
+    end
+    dd:HookScript("OnShow", function(self) self:Refresh() end)
+    dd:Refresh()
+    return dd
+  end
+
+  -- Fallback: click cycles to the next option.
+  local btn = makeRedButton(parent, "", function(self)
+    local list, cur = resolveOptions(options), get and get()
+    if #list == 0 then return end
+    local nextIndex = 1
+    for i, opt in ipairs(list) do
+      if opt.value == cur then nextIndex = (i % #list) + 1 end
+    end
+    if set then set(list[nextIndex].value) end
+    self:Refresh()
+  end)
+  btn:SetWidth(width or 160)
+  function btn:Refresh()
+    self.text:SetText(currentText(options, get))
+  end
+  btn:HookScript("OnShow", function(self) self:Refresh() end)
+  btn:Refresh()
+  return btn
 end
 
 ---------------------------------------------------------------------------
