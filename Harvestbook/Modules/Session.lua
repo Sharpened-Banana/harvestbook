@@ -628,7 +628,7 @@ local function refreshSessionTab(f)
   for i, bar in ipairs(f.bars) do
     local b = bars[i]
     if b then
-      bar:SetProgress(b.current or b[2], b.target or b[3], b.label or b[1])
+      bar:SetProgress(b.current or b[2], b.target or b[3], b.label or b[1], b.fmt)
       bar:Show()
     else
       bar:Hide()
