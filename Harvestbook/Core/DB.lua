@@ -64,6 +64,9 @@ HB.defaults = {
 -- migrations[n] = function(global) ... end; run in order for n > schemaVersion.
 HB.migrations = {
   [1] = function(global) end, -- no-op: establishes schema v1 on a fresh DB
+  [2] = function(global) -- "Biggest single node" record removed
+    if global.records then global.records.biggestNode = nil end
+  end,
 }
 
 function HB:InitDB()

@@ -195,8 +195,7 @@ local function goalLabel(g)
 end
 
 local RECORD_NAMES = {
-  bestGph = "Best gold/hr", biggestNode = "Biggest node",
-  longest = "Longest session", mostNodes = "Most nodes",
+  bestGph = "Best gold/hr", longest = "Longest session", mostNodes = "Most nodes",
 }
 
 local function recordLabel(name, value)

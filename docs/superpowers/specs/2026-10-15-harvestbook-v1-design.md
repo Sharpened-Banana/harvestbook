@@ -163,7 +163,7 @@ Active time only accrues while running. Gold/hr = value / activeSeconds × 3600;
 - Refreshes on `HB_NODE_GATHERED` (single pin) and zone change.
 
 ### 4.4 Records (Modules/Records.lua)
-- Records: best gold/hr session (min 10 min), biggest single-node value, longest session, most nodes in a session. Updated on session stop and per gather (biggest node). Alarm fires on new record if Alarms enabled (via `HB_RECORD_BROKEN` message).
+- Records: best gold/hr session (min 10 min), longest session, most nodes in a session. Updated on session stop. (The biggest single-node record was removed after v1.) Alarm fires on new record if Alarms enabled (via `HB_RECORD_BROKEN` message).
 - Lifetime totals per material, account-wide and per character (warband view toggle).
 - Session history list: date, duration, zones, gold, gold/hr; click to open its materials list (read-only Session table widget). Delete-session button.
 - Public API: `Records:GetSessions(filter)`.
