@@ -75,3 +75,9 @@ In-game checks for code that cannot run under the unit test runner.
 - [ ] Empty zone shows "No spots recorded in this zone yet."
 - [ ] Best Spot readable at 700×500
 - [ ] **Verify:** ColumnList renders `|cff9d9d9d` color escapes in cells; Format.Money output also greys with them
+
+## Alarms (Task 18)
+- [ ] Test button plays each sound and shows text
+- [ ] Value alarm fires on a high-value node; no repeat within 2 s
+- [ ] Mute silences all
+- [ ] Alarms page usable at 700×500
