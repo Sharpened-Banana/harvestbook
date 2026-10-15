@@ -3,7 +3,8 @@ local ADDON, ns = ...
 -- Price resolution + cache (spec §6). Values are integer copper.
 -- Cache: global.prices[itemKey] = { value = copper, source = name, time = unix }.
 -- Cached prices are reused without expiry; only Refresh/SetOverride replace them,
--- so prices are never re-queried automatically during gathering.
+-- so a known price is never re-queried automatically during gathering.
+-- Unpriced items are not cached and are re-resolved on each Get.
 
 local HB = ns.HB
 local PriceChain = ns.PriceChain
@@ -78,16 +79,24 @@ function Pricing:Sources()
   return list
 end
 
+-- Only real prices are cached; an unpriced result (0, "none") clears any
+-- stale entry so the item is re-resolved on the next Get (e.g. once the
+-- vendor price is available from the item cache).
 local function resolveAndCache(self, itemID, quality, link)
   local copper, source = PriceChain.Resolve(itemID, quality, link, self:Sources())
-  HB.db.global.prices[ItemKey(itemID, quality)] = { value = copper, source = source, time = time() }
+  local key = ItemKey(itemID, quality)
+  if copper > 0 then
+    HB.db.global.prices[key] = { value = copper, source = source, time = time() }
+  else
+    HB.db.global.prices[key] = nil
+  end
   return copper, source
 end
 
 function Pricing:Get(itemID, quality, link)
   if not itemID then return 0, "none" end
   local cached = HB.db.global.prices[ItemKey(itemID, quality)]
-  if cached and type(cached.value) == "number" then
+  if cached and type(cached.value) == "number" and cached.value > 0 then
     return cached.value, cached.source
   end
   return resolveAndCache(self, itemID, quality, link)
