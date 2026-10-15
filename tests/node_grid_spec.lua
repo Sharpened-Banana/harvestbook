@@ -116,4 +116,31 @@ describe("NodeGrid", function()
     assert.is_true(zone[k].imported)
     assert.is_nil(G.ImportPoint(zone, 0.1, 0.1, "ore"))
   end)
+  it("ItemsFor sums items of spots attributed to the node, sorted by count", function()
+    local zone = {}
+    G.Record(zone, gather({ objectID = 1, x = 0.1, y = 0.1, items = { { itemID = 10, count = 2 }, { itemID = 11, count = 5 } } }), 0)
+    G.Record(zone, gather({ objectID = 1, x = 0.1, y = 0.1, items = { { itemID = 10, count = 1 } } }), 0)
+    G.Record(zone, gather({ objectID = 2, x = 0.5, y = 0.5, items = { { itemID = 99, count = 4 } } }), 0)
+    assert.are.same({ { 11, 5 }, { 10, 3 } }, (function()
+      local out = {}
+      for i, r in ipairs(G.ItemsFor(zone, 1)) do out[i] = { r.itemID, r.count } end
+      return out
+    end)())
+    assert.are.equal(1, #G.ItemsFor(zone, 2))
+    assert.are.same({}, G.ItemsFor(zone, 7))
+  end)
+
+  it("ItemsFor ignores imported cells and uses the dominant node of a mixed spot", function()
+    local zone = {}
+    G.ImportPoint(zone, 0.3, 0.3, "ore")
+    G.Record(zone, gather({ objectID = 1, items = { { itemID = 10, count = 1 } } }), 0)
+    G.Record(zone, gather({ objectID = 2, items = { { itemID = 20, count = 1 } } }), 0)
+    G.Record(zone, gather({ objectID = 2, items = { { itemID = 20, count = 1 } } }), 0)
+    assert.are.same({}, G.ItemsFor(zone, 1))
+    local rows = G.ItemsFor(zone, 2)
+    assert.are.equal(2, #rows)
+    assert.are.equal(20, rows[1].itemID)
+    assert.are.equal(2, rows[1].count)
+    assert.are.equal(10, rows[2].itemID)
+  end)
 end)

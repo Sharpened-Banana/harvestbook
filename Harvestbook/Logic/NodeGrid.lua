@@ -107,6 +107,26 @@ function M.Summarize(zone)
   return rows
 end
 
+-- Item totals of the spots attributed to `nodeID` (same rule as Summarize),
+-- sorted by count desc then itemID: { {itemID, count}, ... }.
+function M.ItemsFor(zone, nodeID)
+  local totals = {}
+  for _, spot in pairs(zone) do
+    if (spot.gathers or 0) > 0 and dominant(spot) == nodeID then
+      for itemID, n in pairs(spot.items) do
+        totals[itemID] = (totals[itemID] or 0) + n
+      end
+    end
+  end
+  local rows = {}
+  for itemID, n in pairs(totals) do rows[#rows + 1] = { itemID = itemID, count = n } end
+  table.sort(rows, function(a, b)
+    if a.count ~= b.count then return a.count > b.count end
+    return a.itemID < b.itemID
+  end)
+  return rows
+end
+
 function M.ImportPoint(zone, x, y, kind)
   local key = resolveKey(zone, x, y, kind)
   if zone[key] then return nil end
