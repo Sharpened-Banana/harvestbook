@@ -29,6 +29,7 @@ LibStub("AceTimer-3.0"):Embed(Gather)
 
 local function secret(v) return issecretvalue and issecretvalue(v) end
 
+local lastFiredCastGUID -- castGUID of the last snapshot fired on LOOT_CLOSED
 local pending        -- { kind, time, targetName, castGUID, snapshot, items, objectID, npcID, mapID, x, y, chat }
 local lootTimer, chatTimer
 local matcher
@@ -212,6 +213,12 @@ end
 local function startPending(kind, targetName, castGUID, isSent)
   local now = GetTime()
   local p = pending
+  -- A late SUCCEEDED for a cast whose loot was already snapshotted (or
+  -- already fired) must not flush or re-open it.
+  if not isSent and castGUID then
+    if p and p.snapshot and p.castGUID == castGUID then return end
+    if not p and castGUID == lastFiredCastGUID then return end
+  end
   if not isSent and p and p.kind == kind and not p.snapshot
       and (not p.castGUID or not castGUID or p.castGUID == castGUID) then
     -- Restart the loot window from the completed cast (also leaves a chat
@@ -344,6 +351,7 @@ function Gather:LOOT_CLOSED(event)
   local p = pending
   if not p or not p.snapshot then return end
   clearPending()
+  lastFiredCastGUID = p.castGUID
   fire(p)
 end
 
