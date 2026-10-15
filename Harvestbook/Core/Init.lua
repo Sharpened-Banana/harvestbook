@@ -280,7 +280,7 @@ local function sessionModule()
   return nil
 end
 
-local SESSION_CMDS = { start = "Start", pause = "Pause", resume = "Resume", stop = "Stop", reset = "Reset" }
+local SESSION_CMDS = { start = "Start", pause = "Pause", resume = "Resume", stop = "Stop", reset = "ConfirmReset" }
 
 function HB:OnSlash(input)
   local cmd = string.lower((input or ""):match("^%s*(%S*)") or "")

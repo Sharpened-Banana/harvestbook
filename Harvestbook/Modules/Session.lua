@@ -131,6 +131,12 @@ end
 -- Session state
 ---------------------------------------------------------------------------
 
+local function nodeTotal(s)
+  local n = 0
+  for _, c in pairs(s.nodes or {}) do n = n + c end
+  return n
+end
+
 local function save()
   local s = cur()
   if s then SessionMath.Checkpoint(s, time()) end
@@ -148,11 +154,15 @@ local function changed(state, s)
   refreshAll()
 end
 
+-- Appends a stopped session to history; a session with no gathers is
+-- discarded instead. Returns true when archived.
 local function archive(s)
   clearAuto(s)
+  if next(s.items) == nil and nodeTotal(s) == 0 then return false end
   local list = HB.db.global.sessions
   list[#list + 1] = s
   while #list > MAX_HISTORY do table.remove(list, 1) end
+  return true
 end
 
 local function startNew()
@@ -212,15 +222,24 @@ function Session:Stop()
     return
   end
   SessionMath.Stop(s, time(), priceFn())
-  archive(s)
+  local kept = archive(s)
   HB.char.current = nil
-  changed("stopped", s)
+  changed("stopped", kept and s or nil) -- empty sessions are discarded
 end
 
 function Session:Reset()
   HB.char.current = nil
   wipe(gatherLog)
   changed("stopped", nil)
+end
+
+-- Asks before Reset (page button and /hb reset).
+function Session:ConfirmReset()
+  if not cur() then
+    HB:Msg("no session to reset.")
+    return
+  end
+  StaticPopup_Show("HARVESTBOOK_SESSION_RESET")
 end
 
 ---------------------------------------------------------------------------
@@ -392,11 +411,6 @@ local function showRowTooltip(row, rowFrame, cellKey)
   GameTooltip:Show()
 end
 
-local function nodeCounts(s)
-  local n = s.nodes
-  return (n.herb or 0) + (n.ore or 0) + (n.skin or 0)
-end
-
 refreshTotals = function(body)
   local ui = body.session
   local s = cur()
@@ -405,7 +419,7 @@ refreshTotals = function(body)
     local now = time()
     local secs = SessionMath.ActiveSeconds(s, now)
     local sum = SessionMath.Summary(s, now, priceFn())
-    local nodes = nodeCounts(s)
+    local nodes = nodeTotal(s)
     v.time = Format.Duration(secs)
     v.nodes = string.format("%d / %d / %d", s.nodes.herb or 0, s.nodes.ore or 0, s.nodes.skin or 0)
     v.materials = Format.Thousands(sum.materials)
@@ -496,7 +510,7 @@ local function buildPage(body)
 
   ui.prices = W.RedButton(body, "Refresh prices", function() HB:RefreshSessionPrices() end)
   ui.prices:SetPoint("BOTTOMLEFT", body, "BOTTOMLEFT", 0, 0)
-  ui.reset = W.RedButton(body, "Reset", function() StaticPopup_Show("HARVESTBOOK_SESSION_RESET") end)
+  ui.reset = W.RedButton(body, "Reset", function() Session:ConfirmReset() end)
   ui.reset:SetPoint("LEFT", ui.prices, "RIGHT", 6, 0)
   ui.post = W.RedButton(body, "Post to chat", function(btn) postToChat(btn) end)
   ui.post:SetPoint("LEFT", ui.reset, "RIGHT", 6, 0)
