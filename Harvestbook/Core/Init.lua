@@ -239,6 +239,8 @@ function HB:OnInitialize()
 
   self:InitModuleStates()
 
+  if self.InitOptions then self:InitOptions() end -- Core/Options.lua: profiles tab + Blizzard Settings
+
   self:RegisterChatCommand("hb", "OnSlash")
   self:RegisterChatCommand("harvestbook", "OnSlash")
 end
