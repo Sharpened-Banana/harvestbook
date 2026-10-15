@@ -39,3 +39,12 @@ In-game checks for code that cannot run under the unit test runner.
 - [ ] Toggle Session off → page/tabs vanish; on → session data intact
 - [ ] **Verify:** quality badge atlas `Professions-Icon-Quality-Tier<q>-Small` renders for tier 1/2 reagents
 - [ ] **Verify:** Post to chat menu greys Party/Guild when not grouped / guildless; Say posts the one-line summary
+
+## Node Log (Task 13)
+- [ ] Node Log shows current zone with node names, counts, share, avg items
+- [ ] Pager cycles zones (sorted by name); prev/next grey out at the ends
+- [ ] Clicking a node row shows its item breakdown (Item, Count, Per node) below
+- [ ] Forget zone asks to confirm, then clears the zone and moves the pager on
+- [ ] GatherMate2 import adds pins with 0 gathers (herb and ore only); button greyed without GatherMate2
+- [ ] **Verify:** GatherMate2 `gmdbs[...].__gm2_base_storage` / `GetNodesForZone` / `DecodeLoc` behave as the comment in NodeLog.lua assumes
+- [ ] **Verify:** Forget zone StaticPopup passes the mapID through to OnAccept
