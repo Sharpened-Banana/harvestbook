@@ -336,11 +336,11 @@ end
 ---------------------------------------------------------------------------
 
 local COLUMNS = {
-  { key = "name", title = "Material", width = 220, align = "LEFT", sortable = true },
-  { key = "count", title = "Count", width = 64, align = "RIGHT", sortable = true },
-  { key = "perHour", title = "Per hour", width = 76, align = "RIGHT", sortable = true },
-  { key = "unit", title = "Price", width = 100, align = "RIGHT", sortable = true },
-  { key = "value", title = "Value", width = 110, align = "RIGHT", sortable = true },
+  { key = "name", title = "Material", width = 150, align = "LEFT", sortable = true },
+  { key = "count", title = "Count", width = 50, align = "RIGHT", sortable = true },
+  { key = "perHour", title = "Per hour", width = 60, align = "RIGHT", sortable = true },
+  { key = "unit", title = "Price", width = 75, align = "RIGHT", sortable = true },
+  { key = "value", title = "Value", width = 85, align = "RIGHT", sortable = true },
 }
 
 local TOTALS = {
@@ -351,6 +351,9 @@ local TOTALS = {
   { key = "gph", label = "Gold/hr" },
   { key = "nph", label = "Nodes/hr" },
 }
+
+local TOTALS_SLOT = 146 -- 3 slots = 438 px
+local TOTALS_ROW = 32
 
 local function sortKey()
   local key = profile().session.sortKey
@@ -472,21 +475,28 @@ local function buildPage(body)
   ui.stop = W.RedButton(body, "Stop", action("Stop"))
   ui.stop:SetPoint("LEFT", ui.resume, "RIGHT", 6, 0)
 
+  -- Totals: two rows of three slots (TOTALS_SLOT px each) so the strip fits
+  -- the ~440 px page body at the 700x500 minimum window.
   ui.totals = {}
-  local x = 0
-  for _, t in ipairs(TOTALS) do
+  for i, t in ipairs(TOTALS) do
+    local col, row = (i - 1) % 3, math.floor((i - 1) / 3)
     local label = body:CreateFontString(nil, "OVERLAY", "HarvestbookFontSmall")
-    label:SetPoint("TOPLEFT", body, "TOPLEFT", x, -32)
+    label:SetPoint("TOPLEFT", body, "TOPLEFT", col * TOTALS_SLOT, -32 - row * TOTALS_ROW)
+    label:SetWidth(TOTALS_SLOT - 6)
+    label:SetJustifyH("LEFT")
+    label:SetWordWrap(false)
     label:SetText(t.label)
     label:SetTextColor(Theme:Color("grey"))
     local value = body:CreateFontString(nil, "OVERLAY", "HarvestbookFontBody")
     value:SetPoint("TOPLEFT", label, "BOTTOMLEFT", 0, -3)
+    value:SetWidth(TOTALS_SLOT - 6)
+    value:SetJustifyH("LEFT")
+    value:SetWordWrap(false)
     ui.totals[t.key] = value
-    x = x + (t.key == "nodes" and 130 or 88)
   end
 
   ui.list = W.ColumnList(body, COLUMNS)
-  ui.list:SetPoint("TOPLEFT", body, "TOPLEFT", 0, -72)
+  ui.list:SetPoint("TOPLEFT", body, "TOPLEFT", 0, -32 - 2 * TOTALS_ROW - 8)
   ui.list:SetPoint("BOTTOMRIGHT", body, "BOTTOMRIGHT", 0, 56)
   ui.list.onSort = function(key)
     if key == sortKey() then
