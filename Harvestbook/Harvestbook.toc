@@ -1,0 +1,42 @@
+## Interface: 120100, 120105
+## AllowLoadGameType: mainline
+## Title: Harvestbook
+## Notes: Gathering session tracker, node log, map pins and goals for herbalism, mining and skinning.
+## Author: Sharpened Banana
+## Version: 0.1.0
+## Category: Professions
+## IconTexture: Interface\Icons\Trade_Herbalism
+## SavedVariables: HarvestbookDB
+## SavedVariablesPerCharacter: HarvestbookCharDB
+## AddonCompartmentFunc: Harvestbook_OnAddonCompartmentClick
+
+embeds.xml
+
+Logic\Format.lua
+Logic\SessionMath.lua
+Logic\NodeGrid.lua
+Logic\PriceChain.lua
+Logic\Rankings.lua
+Logic\GoalEval.lua
+Logic\AlarmEval.lua
+Logic\Migrate.lua
+Logic\GatherParse.lua
+
+Core\Init.lua
+Core\DB.lua
+Core\Pricing.lua
+Core\Gather.lua
+Core\Options.lua
+
+UI\Theme.lua
+UI\Widgets.lua
+UI\Box.lua
+UI\Companion.lua
+
+Modules\Session.lua
+Modules\NodeLog.lua
+Modules\MapPins.lua
+Modules\Records.lua
+Modules\BestSpot.lua
+Modules\Goals.lua
+Modules\Alarms.lua
