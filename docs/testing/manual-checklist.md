@@ -30,3 +30,12 @@ In-game checks for code that cannot run under the unit test runner.
 - [ ] Companion X hides it; with "Show automatically when gathering" on, the next gather shows it again
 - [ ] "Hide when no session is active": companion hides after `/hb stop`, shows on next session start
 - [ ] Minimap tooltip shows Gold/hr while a session exists; "Show minimap button" option hides/shows it
+
+## Session (Task 12)
+- [ ] Gather 5 nodes → materials list shows counts/per hour/value; footer line matches
+- [ ] `/reload` mid-session → session continues, offline time not added
+- [ ] Open mailbox → status Paused; close → resumes
+- [ ] Stop → appears in Records history
+- [ ] Toggle Session off → page/tabs vanish; on → session data intact
+- [ ] **Verify:** quality badge atlas `Professions-Icon-Quality-Tier<q>-Small` renders for tier 1/2 reagents
+- [ ] **Verify:** Post to chat menu greys Party/Guild when not grouped / guildless; Say posts the one-line summary
