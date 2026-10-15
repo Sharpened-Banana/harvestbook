@@ -48,3 +48,12 @@ In-game checks for code that cannot run under the unit test runner.
 - [ ] GatherMate2 import adds pins with 0 gathers (herb and ore only); button greyed without GatherMate2
 - [ ] **Verify:** GatherMate2 `gmdbs[...].__gm2_base_storage` / `GetNodesForZone` / `DecodeLoc` behave as the comment in NodeLog.lua assumes
 - [ ] **Verify:** Forget zone StaticPopup passes the mapID through to OnAccept
+
+## Map Pins (Task 14)
+- [ ] Pins on world map + minimap after gathering
+- [ ] Tooltip matches spec (gold node name, "N gathers here · Xg per hour", top 4 items, grey hint; imported cells say "Imported from GatherMate2")
+- [ ] Shift-right-click forgets (pin disappears from world map and minimap)
+- [ ] Old pins faded (temporarily set fade days to 1 and edit lastSeen via `/run`)
+- [ ] FarmHud shows pins (if installed)
+- [ ] **Verify:** pin texture masks (`Interface\CharacterFrame\TempPortraitAlphaMask`) render a round icon with dark rim on both maps
+- [ ] **Verify:** Map Pins options (kind filters, min gathers, fade days, size) rebuild pins immediately; toggling Map Pins off removes all pins
