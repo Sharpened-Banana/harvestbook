@@ -1,0 +1,17 @@
+describe("runner", function()
+  it("same passes on equal nested tables", function()
+    assert.are.same({ a = 1, b = { 2, 3, { c = "x" } } }, { a = 1, b = { 2, 3, { c = "x" } } })
+  end)
+
+  it("same fails on differing nested tables", function()
+    assert.has_error(function()
+      assert.are.same({ a = 1, b = { 2, 3 } }, { a = 1, b = { 2, 4 } })
+    end)
+  end)
+
+  it("equal fails on 1 vs 2", function()
+    assert.has_error(function()
+      assert.are.equal(1, 2)
+    end)
+  end)
+end)
