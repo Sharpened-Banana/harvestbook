@@ -23,7 +23,6 @@ local MIN_GPH_SECONDS = 600
 local DASH = "\226\128\148"
 
 local charKey
-local pageBody
 local viewMode = "warband"   -- "warband" | "char"
 local detailID               -- session id shown in the detail view
 
@@ -147,17 +146,17 @@ local LIFE_COLUMNS = {
 }
 
 local HISTORY_COLUMNS = {
-  { key = "date", title = "Date", width = 110, align = "LEFT" },
-  { key = "duration", title = "Duration", width = 64, align = "RIGHT" },
-  { key = "zones", title = "Zones", width = 150, align = "LEFT" },
-  { key = "gold", title = "Gold", width = 74, align = "RIGHT" },
-  { key = "gph", title = "Gold/hr", width = 74, align = "RIGHT" },
+  { key = "date", title = "Date", width = 100, align = "LEFT" },
+  { key = "duration", title = "Duration", width = 60, align = "RIGHT" },
+  { key = "zones", title = "Zones", width = 100, align = "LEFT" },
+  { key = "gold", title = "Gold", width = 80, align = "RIGHT" },
+  { key = "gph", title = "Gold/hr", width = 80, align = "RIGHT" },
 }
 
 local DETAIL_COLUMNS = {
-  { key = "name", title = "Item", width = 220, align = "LEFT" },
-  { key = "count", title = "Count", width = 64, align = "RIGHT" },
-  { key = "price", title = "Price", width = 90, align = "RIGHT" },
+  { key = "name", title = "Item", width = 170, align = "LEFT" },
+  { key = "count", title = "Count", width = 60, align = "RIGHT" },
+  { key = "price", title = "Price", width = 80, align = "RIGHT" },
   { key = "value", title = "Value", width = 90, align = "RIGHT" },
 }
 
@@ -273,7 +272,6 @@ local function refreshPage(body)
 end
 
 local function buildPage(body)
-  pageBody = body
   local ui = {}
   body.records = ui
 
