@@ -543,8 +543,8 @@ local function chatLine()
   local now = time()
   local sum = SessionMath.Summary(s, now, priceFn())
   return string.format("Harvestbook: %s materials (%d kinds), %s in %s " .. DASH .. " %s/hr",
-    Format.Thousands(sum.materials), sum.kinds, Format.Money(sum.copper),
-    Format.Duration(SessionMath.ActiveSeconds(s, now)), sum.gph and Format.Money(sum.gph) or DASH)
+    Format.Thousands(sum.materials), sum.kinds, money(sum.copper),
+    Format.Duration(SessionMath.ActiveSeconds(s, now)), sum.gph and money(sum.gph) or DASH)
 end
 
 local function send(channel)

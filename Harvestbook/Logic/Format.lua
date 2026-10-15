@@ -12,6 +12,8 @@ function M.Thousands(n)
   return (neg and "-" or "") .. out
 end
 
+-- style: "gold" (whole gold), "full" (every non-zero unit), "auto" (gold
+-- only from 10g up, otherwise the two largest non-zero units).
 function M.Money(copper, style)
   copper = math.floor(copper or 0)
   local neg = copper < 0
@@ -20,7 +22,14 @@ function M.Money(copper, style)
   local s = math.floor((copper % 10000) / 100)
   local c = copper % 100
   local out
-  if style == "full" then
+  if style == "auto" and copper < 100000 then
+    -- Below 10g: the two largest non-zero units ("4g 12s", "45s 3c", "7c").
+    local parts = {}
+    if g > 0 then parts[#parts + 1] = g .. "g" end
+    if s > 0 then parts[#parts + 1] = s .. "s" end
+    if c > 0 then parts[#parts + 1] = c .. "c" end
+    out = #parts > 0 and (parts[1] .. (parts[2] and (" " .. parts[2]) or "")) or "0c"
+  elseif style == "full" then
     local parts = {}
     if g > 0 then parts[#parts + 1] = M.Thousands(g) .. "g" end
     if s > 0 then parts[#parts + 1] = s .. "s" end
