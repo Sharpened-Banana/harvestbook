@@ -24,8 +24,16 @@ local MAX_GOALS = 5
 local TICK_SECONDS = 5
 local DASH = "\226\128\148"
 
-local reached = {}       -- [goalID] = true, reset per session
-local lastSessionID
+-- Reached goals persist in HB.char.goalsReached = { sessionID, ids = {[goalID]=true} }
+-- so a /reload mid-session does not re-fire them.
+local function reachedFor(sessionID)
+  local st = HB.char.goalsReached
+  if not st or st.sessionID ~= sessionID then
+    st = { sessionID = sessionID, ids = {} }
+    HB.char.goalsReached = st
+  end
+  return st.ids
+end
 local ticker
 local boxes = {}         -- item EditBoxes that accept Shift-clicked links
 local hooked = false
@@ -111,7 +119,8 @@ function Goals:DeleteGoal(id)
   for i, g in ipairs(list) do
     if g.id == id then
       table.remove(list, i)
-      reached[id] = nil
+      local st = HB.char.goalsReached
+      if st and st.ids then st.ids[id] = nil end
       return true
     end
   end
@@ -123,7 +132,7 @@ function Goals:Evaluate()
   if not s or s.state ~= "running" then return end
   local list = pg().list
   if #list == 0 then return end
-  for _, g in ipairs(GoalEval.NewlyReached(list, s, time(), HB.Pricing:Fn(), reached)) do
+  for _, g in ipairs(GoalEval.NewlyReached(list, s, time(), HB.Pricing:Fn(), reachedFor(s.id))) do
     HB:SendMessage("HB_GOAL_REACHED", g)
   end
 end
@@ -158,10 +167,7 @@ function Goals:OnGather(gather)
 end
 
 function Goals:OnSession(state, s)
-  if state == "running" and s and s.id ~= lastSessionID then
-    lastSessionID = s.id
-    reached = {}
-  end
+  if state == "running" and s then reachedFor(s.id) end
 end
 
 ---------------------------------------------------------------------------
@@ -172,7 +178,7 @@ end
 -- post-hook lets us copy the link into a focused Harvestbook input. The
 -- HandleModifiedItemClick hook covers item clicks that route around it.
 local function captureLink(link)
-  if type(link) ~= "string" then return end
+  if type(link) ~= "string" or not Goals:IsEnabled() then return end
   for box in pairs(boxes) do
     if box:IsVisible() and box:HasFocus() then box:SetText(link) end
   end
@@ -181,7 +187,7 @@ end
 local function installHooks()
   if hooked then return end
   hooked = true
-  hooksecurefunc("ChatEdit_InsertLink", captureLink)
+  if ChatEdit_InsertLink then hooksecurefunc("ChatEdit_InsertLink", captureLink) end
   if HandleModifiedItemClick then
     hooksecurefunc("HandleModifiedItemClick", function(link)
       if IsModifiedClick and IsModifiedClick("CHATLINK") then captureLink(link) end
@@ -415,7 +421,17 @@ local PAGE = { id = "goals", title = "Goals", order = 50, build = buildPage, ref
 function Goals:OnEnable()
   pg().nextID = pg().nextID or 0
   local cur = currentSession()
-  lastSessionID = cur and cur.id or nil
+  local st = HB.char.goalsReached
+  if cur and (not st or st.sessionID ~= cur.id) then
+    -- Enabled mid-session (or first run): goals already met must not burst.
+    local ids = reachedFor(cur.id)
+    local priceFn = HB.Pricing:Fn()
+    local now = time()
+    for _, g in ipairs(pg().list) do
+      local _, _, done = GoalEval.Progress(g, cur, now, priceFn)
+      if done then ids[g.id] = true end
+    end
+  end
 
   -- One handler per message (AceEvent keeps a single callback per object).
   HB:Listen(self, "HB_NODE_GATHERED", function(mod, gather)
@@ -436,6 +452,7 @@ function Goals:OnEnable()
   ticker = C_Timer.NewTicker(TICK_SECONDS, function()
     HB:SafeCall("Goals", Goals.Evaluate, Goals)
     HB.UI:RefreshPage("goals")
+    HB.UI:RefreshCompanion()
   end)
 
   PAGE.icon = Theme.ICONS and Theme.ICONS.goals
