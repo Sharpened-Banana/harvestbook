@@ -61,7 +61,9 @@ HB.defaults = {
 }
 
 -- migrations[n] = function(global) ... end; run in order for n > schemaVersion.
-HB.migrations = {}
+HB.migrations = {
+  [1] = function(global) end, -- no-op: establishes schema v1 on a fresh DB
+}
 
 function HB:InitDB()
   self.db = LibStub("AceDB-3.0"):New("HarvestbookDB", self.defaults, true)
