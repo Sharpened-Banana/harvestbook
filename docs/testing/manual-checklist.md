@@ -57,3 +57,10 @@ In-game checks for code that cannot run under the unit test runner.
 - [ ] FarmHud shows pins (if installed)
 - [ ] **Verify:** pin texture masks (`Interface\CharacterFrame\TempPortraitAlphaMask`) render a round icon with dark rim on both maps
 - [ ] **Verify:** Map Pins options (kind filters, min gathers, fade days, size) rebuild pins immediately; toggling Map Pins off removes all pins
+
+## Task 15: Records
+- [ ] Stopping a 10+ minute session sets best gold/hr
+- [ ] Warband toggle switches lifetime list
+- [ ] Delete session removes it
+- [ ] Clicking a history row opens its frozen-price materials list; "< Back" returns
+- [ ] Beating an existing record (not the first value) fires an alarm/HB_RECORD_BROKEN
