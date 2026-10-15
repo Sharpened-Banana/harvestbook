@@ -8,6 +8,9 @@ local ADDON, ns = ...
 --   UNIT_SPELLCAST_SENT / _SUCCEEDED (player, gathering spell) -> pending
 --   LOOT_READY within LOOT_WAIT s of the cast -> snapshot loot + position (once)
 --   LOOT_CLOSED -> fire, clear
+--   UNIT_SPELLCAST_FAILED / _INTERRUPTED of the pending cast -> clear
+--   LOOT_READY whose sources don't fit the kind (Creature for herb/ore,
+--     GameObject for skin) -> clear (it is other loot, not this gather)
 --   no LOOT_READY within LOOT_WAIT s -> chat fallback: CHAT_MSG_LOOT self-loot
 --     lines are aggregated and fired once CHAT_WAIT s later (objectID/npcID nil).
 --     Lines are buffered from the cast onward, because with instant auto-loot
@@ -26,7 +29,7 @@ LibStub("AceTimer-3.0"):Embed(Gather)
 
 local function secret(v) return issecretvalue and issecretvalue(v) end
 
-local pending        -- { kind, time, targetName, snapshot, items, objectID, npcID, mapID, x, y, chat }
+local pending        -- { kind, time, targetName, castGUID, snapshot, items, objectID, npcID, mapID, x, y, chat }
 local lootTimer, chatTimer
 local matcher
 
@@ -206,18 +209,20 @@ end
 -- isSent: UNIT_SPELLCAST_SENT starts a new gather; UNIT_SPELLCAST_SUCCEEDED
 -- confirms the pending one (refreshing its loot window) or starts one if the
 -- SENT was missed.
-local function startPending(kind, targetName, isSent)
+local function startPending(kind, targetName, castGUID, isSent)
   local now = GetTime()
   local p = pending
-  if not isSent and p and p.kind == kind and not p.snapshot then
+  if not isSent and p and p.kind == kind and not p.snapshot
+      and (not p.castGUID or not castGUID or p.castGUID == castGUID) then
     -- Restart the loot window from the completed cast (also leaves a chat
     -- window that a long cast time may have opened).
     if chatTimer then Gather:CancelTimer(chatTimer); chatTimer = nil end
     p.time = now
     p.targetName = p.targetName or targetName
+    p.castGUID = p.castGUID or castGUID
   else
     flushPending()
-    p = { kind = kind, time = now, targetName = targetName, chat = {} }
+    p = { kind = kind, time = now, targetName = targetName, castGUID = castGUID, chat = {} }
     -- Cast position; LOOT_READY re-captures it. Used by the chat fallback.
     p.mapID, p.x, p.y = playerPosition()
     pending = p
@@ -226,7 +231,7 @@ local function startPending(kind, targetName, isSent)
   lootTimer = schedule(onLootTimeout, LOOT_WAIT)
 end
 
-local function onCast(unit, spellID, target, isSent)
+local function onCast(unit, spellID, target, castGUID, isSent)
   if secret(unit) or unit ~= "player" then return end
   if secret(spellID) or type(spellID) ~= "number" then return end
   local name = C_Spell.GetSpellName(spellID)
@@ -237,15 +242,38 @@ local function onCast(unit, spellID, target, isSent)
   if target ~= nil and not secret(target) and type(target) == "string" and target ~= "" then
     targetName = target
   end
-  startPending(kind, targetName, isSent)
+  if secret(castGUID) or type(castGUID) ~= "string" or castGUID == "" then castGUID = nil end
+  startPending(kind, targetName, castGUID, isSent)
 end
 
 function Gather:UNIT_SPELLCAST_SENT(event, unit, target, castGUID, spellID)
-  onCast(unit, spellID, target, true)
+  onCast(unit, spellID, target, castGUID, true)
 end
 
 function Gather:UNIT_SPELLCAST_SUCCEEDED(event, unit, castGUID, spellID)
-  onCast(unit, spellID, nil, false)
+  onCast(unit, spellID, nil, castGUID, false)
+end
+
+-- A failed/interrupted gathering cast ends the pending gather, so loot that
+-- follows (e.g. a mob) is not counted. Matched by castGUID when known; a
+-- FAILED for a different cast (spam-click while casting) is ignored.
+local function onCastEnded(unit, castGUID)
+  local p = pending
+  if not p or p.snapshot then return end
+  if secret(unit) or unit ~= "player" then return end
+  if p.castGUID then
+    if secret(castGUID) or castGUID ~= p.castGUID then return end
+  end
+  if debugOn() then HB:Msg("gather (%s) cancelled: cast failed or interrupted", p.kind) end
+  clearPending()
+end
+
+function Gather:UNIT_SPELLCAST_FAILED(event, unit, castGUID, spellID)
+  onCastEnded(unit, castGUID)
+end
+
+function Gather:UNIT_SPELLCAST_INTERRUPTED(event, unit, castGUID, spellID)
+  onCastEnded(unit, castGUID)
 end
 
 local function isItemSlot(slot)
@@ -276,13 +304,25 @@ function Gather:LOOT_READY(event)
   local p = pending
   if not p or p.snapshot or chatTimer then return end
   if GetTime() - p.time > LOOT_WAIT then return end
+
+  local n = GetNumLootItems()
+  if secret(n) then n = 0 end
+
+  -- Source-type cross-check: herb/ore come from GameObjects, skins from Creatures.
+  local wrongType = (p.kind == "skin") and "GameObject" or "Creature"
+  for slot = 1, n or 0 do
+    if lootSource(slot) == wrongType then
+      if debugOn() then HB:Msg("gather (%s) cancelled: loot is from a %s", p.kind, wrongType) end
+      clearPending()
+      return
+    end
+  end
+
   p.snapshot = true
   if lootTimer then self:CancelTimer(lootTimer); lootTimer = nil end
   p.chat = nil
 
   local items = {}
-  local n = GetNumLootItems()
-  if secret(n) then n = 0 end
   for slot = 1, n or 0 do
     local ok, quantity = isItemSlot(slot)
     local link = ok and GetLootSlotLink(slot)
@@ -318,6 +358,7 @@ end
 -- Registration: handlers run protected so a failure never escapes.
 local EVENTS = {
   "UNIT_SPELLCAST_SENT", "UNIT_SPELLCAST_SUCCEEDED",
+  "UNIT_SPELLCAST_FAILED", "UNIT_SPELLCAST_INTERRUPTED",
   "LOOT_READY", "LOOT_CLOSED", "CHAT_MSG_LOOT",
 }
 
