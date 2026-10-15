@@ -42,8 +42,8 @@ end
 local function querySession()
   local mod = HB:GetModule("Session", true)
   if not (mod and mod:IsEnabled() and mod.GetCurrent) then return false end
-  local ok, s = pcall(mod.GetCurrent, mod)
-  return ok and s ~= nil and s.state ~= "stopped"
+  local s = HB:SafeCall("UI", mod.GetCurrent, mod) -- nil on error (reported)
+  return s ~= nil and s.state ~= "stopped"
 end
 
 ---------------------------------------------------------------------------
