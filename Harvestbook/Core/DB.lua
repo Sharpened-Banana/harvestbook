@@ -44,7 +44,7 @@ HB.defaults = {
     goals = { list = {} },
     minimap = { hide = false },
     bestspot = { scope = "zones", metric = "gph" },
-    goldStyle = "gold",
+    goldStyle = "auto",
     debug = false,
   },
   -- schemaVersion is deliberately absent: Migrate must see it unset on a fresh DB.
