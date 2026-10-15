@@ -155,23 +155,33 @@ local function bestItemName(gather, priceFn)
   return bestName or gather.targetName or "Node"
 end
 
+-- Evaluation is deferred one frame so Session has always processed this gather;
+-- the session average then EXCLUDES the current node (deterministic ordering).
 function Alarms:OnGather(gather)
   if type(gather) ~= "table" then return end
-  local priceFn = HB.Pricing:Fn()
-  local nodeCopper = SessionMath.NodeValue(gather, priceFn)
-  local ctx = {
-    kind = "node", nodeCopper = nodeCopper, avgCopper = 0, nodeCount = 0,
-    label = bestItemName(gather, priceFn) .. " (" .. money(nodeCopper) .. ")",
-  }
-  local s = currentSession()
-  if s and s.state == "running" then
-    local n = nodeTotal(s)
-    if n > 0 then
-      ctx.nodeCount = n
-      ctx.avgCopper = SessionMath.Value(s, priceFn) / n
+  local function run()
+    if not Alarms:IsEnabled() then return end
+    local priceFn = HB.Pricing:Fn()
+    local nodeCopper = SessionMath.NodeValue(gather, priceFn)
+    local ctx = {
+      kind = "node", nodeCopper = nodeCopper, avgCopper = 0, nodeCount = 0,
+      label = bestItemName(gather, priceFn) .. " (" .. money(nodeCopper) .. ")",
+    }
+    local s = currentSession()
+    if s and s.state == "running" then
+      local n = nodeTotal(s) - 1
+      if n > 0 then
+        ctx.nodeCount = n
+        ctx.avgCopper = math.max(0, SessionMath.Value(s, priceFn) - nodeCopper) / n
+      end
     end
+    fire(ctx)
   end
-  fire(ctx)
+  if C_Timer and C_Timer.After then
+    C_Timer.After(0, function() HB:SafeCall("Alarms", run) end)
+  else
+    run()
+  end
 end
 
 local function goalLabel(g)
@@ -254,7 +264,7 @@ local function newInput(parent, width)
   box:SetAutoFocus(false)
   box:SetTextInsets(2, 2, 0, 0)
   box:SetMaxLetters(7)
-  box:SetScript("OnEscapePressed", function(self) self:ClearFocus() self.reload() end)
+  box:SetScript("OnEscapePressed", function(self) self.cancel = true self.reload() self:ClearFocus() end)
   return box
 end
 
@@ -263,7 +273,9 @@ local function bindNumber(box, rule, field, min)
   local function read() return cfg()[rule][field] end
   box.reload = function() box:SetText(tostring(read() or "")) end
   local function commit()
+    if box.cancel then box.cancel = nil box.reload() return end
     local n = tonumber(box:GetText())
+    if n and field ~= "gold" then n = math.floor(n) end
     if n and n >= (min or 1) then cfg()[rule][field] = n end
     box.reload()
   end
