@@ -64,3 +64,5 @@ In-game checks for code that cannot run under the unit test runner.
 - [ ] Delete session removes it
 - [ ] Clicking a history row opens its frozen-price materials list; "< Back" returns
 - [ ] Beating an existing record (not the first value) fires an alarm/HB_RECORD_BROKEN
+- [ ] Records page readable at 700x500 (no clipped columns)
+- [ ] After Delete session, the page returns to the history list
