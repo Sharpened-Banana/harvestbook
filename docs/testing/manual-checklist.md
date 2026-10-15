@@ -2,6 +2,24 @@
 
 In-game checks for code that cannot run under the unit test runner.
 
+## Before you start
+- [ ] Enable `/console scriptErrors 1` so Lua errors show on screen
+- [ ] Optional: install BugSack + BugGrabber to capture errors with stack traces
+- [ ] Optional: install Auctionator and/or TradeSkillMaster, GatherMate2 and FarmHud to exercise the integrations
+
+### In-game API verification
+Every "Verify:" item below, by section (the original entries stay in their sections):
+- Pricing, gather detection, options: Skinning spell ID 8613 matches; note any Midnight herb/skin spell IDs printed by debug
+- Pricing, gather detection, options: reagent quality returns 1/2 for Midnight reagents
+- Pricing, gather detection, options: loot source GUID not secret (objectID non-nil)
+- Session: quality badge atlas `Professions-Icon-Quality-Tier<q>-Small` renders for tier 1/2 reagents
+- Session: Post to chat menu greys Party/Guild when not grouped / guildless; Say posts the one-line summary
+- Node Log: GatherMate2 `gmdbs[...].__gm2_base_storage` / `GetNodesForZone` / `DecodeLoc` behave as the comment in NodeLog.lua assumes
+- Node Log: Forget zone StaticPopup passes the mapID through to OnAccept
+- Map Pins: pin texture masks (`Interface\CharacterFrame\TempPortraitAlphaMask`) render a round icon with dark rim on both maps
+- Map Pins: Map Pins options (kind filters, min gathers, fade days, size) rebuild pins immediately; toggling Map Pins off removes all pins
+- Best Spot: ColumnList renders `|cff9d9d9d` color escapes in cells; Format.Money output also greys with them
+
 ## Core (Task 8)
 - [ ] Addon loads with no errors (enable `/console scriptErrors 1`)
 - [ ] `/hb help` lists commands
@@ -81,3 +99,9 @@ In-game checks for code that cannot run under the unit test runner.
 - [ ] Value alarm fires on a high-value node; no repeat within 2 s
 - [ ] Mute silences all
 - [ ] Alarms page usable at 700×500
+
+## Cross-module (Task 19)
+- [ ] Toggle each module off/on without `/reload`; dependents grey out and auto-disable (e.g. Node Log off -> Map Pins and Best Spot off)
+- [ ] With all modules off except Session the box shows Session, Window, Settings only
+- [ ] Settings export string -> import on a second character restores settings
+- [ ] Angler's TackleBox installed alongside -> no conflicts, no shared globals (`/dump Harvestbook` only)
