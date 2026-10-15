@@ -12,8 +12,10 @@ local ADDON, ns = ...
 -- A frame can only be in one pin set, so world and minimap pins use separate
 -- pools. `ref` is this module.
 --
+-- Pins are built lazily: minimap pins only for the player's current zone,
+-- world map pins only for zones the map has viewed (plus their children).
 -- Listens: HB_NODELOG_CHANGED(mapID, spotKey): (nil, nil) or (mapID, nil)
--- rebuild everything; (mapID, spotKey) updates one spot.
+-- rebuild everything; (mapID, spotKey) updates one built spot.
 
 local HB = ns.HB
 local Format = ns.Format
@@ -31,7 +33,8 @@ local MASK = "Interface\\CharacterFrame\\TempPortraitAlphaMask"
 
 local pools = { world = {}, minimap = {} }   -- free pins per map type
 local active = { world = {}, minimap = {} }  -- key -> pin per map type
-local gphCache                               -- { [mapID] = gph } for one tooltip show
+local worldBuilt = {}                        -- mapIDs whose world pins are built
+local minimapZone                            -- mapID whose minimap pins are built
 
 local function cfg() return HB.db.profile.pins end
 local function nodeLog() return HB:GetModule("NodeLog", true) end
@@ -109,11 +112,13 @@ end
 ---------------------------------------------------------------------------
 
 local function onEnter(pin) HB:SafeCall("MapPins", showTooltip, pin) end
-local function onLeave() GameTooltip:Hide() end
+local function onLeave(pin)
+  if GameTooltip:GetOwner() == pin then GameTooltip:Hide() end
+end
 
 local function onClick(pin, button)
   if button == "RightButton" and IsShiftKeyDown() then
-    GameTooltip:Hide()
+    if GameTooltip:GetOwner() == pin then GameTooltip:Hide() end
     local nl = nodeLog()
     if nl then HB:SafeCall("MapPins", nl.ForgetSpot, nl, pin.mapID, pin.spotKey) end
   end
@@ -124,22 +129,21 @@ local function newPin()
   pin:SetFrameStrata("HIGH")
   pin:RegisterForClicks("RightButtonUp")
 
+  -- One circular mask shared by the dark backing and the icon.
+  pin.mask = pin:CreateMaskTexture()
+  pin.mask:SetAllPoints()
+  pin.mask:SetTexture(MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+
   pin.bg = pin:CreateTexture(nil, "BACKGROUND")
   pin.bg:SetAllPoints()
   pin.bg:SetColorTexture(0.03, 0.06, 0.05, 0.95)
-  pin.bgMask = pin:CreateMaskTexture()
-  pin.bgMask:SetAllPoints()
-  pin.bgMask:SetTexture(MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
-  pin.bg:AddMaskTexture(pin.bgMask)
+  pin.bg:AddMaskTexture(pin.mask)
 
   pin.icon = pin:CreateTexture(nil, "ARTWORK")
   pin.icon:SetPoint("TOPLEFT", 1, -1)
   pin.icon:SetPoint("BOTTOMRIGHT", -1, 1)
   pin.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-  pin.iconMask = pin:CreateMaskTexture()
-  pin.iconMask:SetAllPoints(pin.icon)
-  pin.iconMask:SetTexture(MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
-  pin.icon:AddMaskTexture(pin.iconMask)
+  pin.icon:AddMaskTexture(pin.mask)
 
   pin:SetScript("OnEnter", onEnter)
   pin:SetScript("OnLeave", onLeave)
@@ -148,8 +152,14 @@ local function newPin()
 end
 
 local function acquire(mapType)
-  local pool = pools[mapType]
-  return table.remove(pool) or newPin()
+  return table.remove(pools[mapType]) or newPin()
+end
+
+local function recycle(mapType, pin)
+  pin:Hide()
+  pin:ClearAllPoints()
+  pin.mapID, pin.spotKey = nil, nil
+  pools[mapType][#pools[mapType] + 1] = pin
 end
 
 local function release(mapType, key)
@@ -161,24 +171,21 @@ local function release(mapType, key)
   else
     HBDPins:RemoveMinimapIcon(MapPins, pin)
   end
-  pin:Hide()
-  pin:ClearAllPoints()
-  pin.mapID, pin.spotKey = nil, nil
-  pools[mapType][#pools[mapType] + 1] = pin
+  recycle(mapType, pin)
 end
 
 local function releaseAll()
+  if not HBDPins then return end
   HBDPins:RemoveAllWorldMapIcons(MapPins)
   HBDPins:RemoveAllMinimapIcons(MapPins)
   for mapType, set in pairs(active) do
     for key, pin in pairs(set) do
-      pin:Hide()
-      pin:ClearAllPoints()
-      pin.mapID, pin.spotKey = nil, nil
-      pools[mapType][#pools[mapType] + 1] = pin
       set[key] = nil
+      recycle(mapType, pin)
     end
   end
+  wipe(worldBuilt)
+  minimapZone = nil
 end
 
 local function shouldShow(spot, p)
@@ -196,46 +203,80 @@ local function alphaFor(spot, p, now)
   return 1
 end
 
--- Creates, updates or removes the pins for one spot, per map type.
-local function updateSpot(mapID, spotKey, spot)
-  local p = cfg()
+-- Creates, updates or removes one pin of one map type.
+local function updatePin(mapType, mapID, spotKey, spot, p, now)
   local key = pinKey(mapID, spotKey)
-  local show = shouldShow(spot, p)
-  local now = time()
-  for _, mapType in ipairs({ "world", "minimap" }) do
-    if show and p[mapType] then
-      local pin = active[mapType][key]
-      if not pin then
-        pin = acquire(mapType)
-        active[mapType][key] = pin
-      end
-      pin.mapID, pin.spotKey = mapID, spotKey
-      pin:SetSize(p.size, p.size)
-      pin.icon:SetTexture(Theme.ICONS and Theme.ICONS[spot.kind])
-      pin:SetAlpha(alphaFor(spot, p, now))
-      local ok
-      if mapType == "world" then
-        ok = HBDPins:AddWorldMapIconMap(MapPins, pin, mapID, spot.x, spot.y, HBD_PINS_WORLDMAP_SHOW_PARENT)
-      else
-        ok = HBDPins:AddMinimapIconMap(MapPins, pin, mapID, spot.x, spot.y, true, false)
-      end
-      if ok then pin:Show() else release(mapType, key) end
-    else
-      release(mapType, key)
+  if shouldShow(spot, p) and p[mapType] then
+    local pin = active[mapType][key]
+    if not pin then
+      pin = acquire(mapType)
+      active[mapType][key] = pin
     end
+    pin.mapID, pin.spotKey = mapID, spotKey
+    pin:SetSize(p.size, p.size)
+    pin.icon:SetTexture(Theme.ICONS and Theme.ICONS[spot.kind])
+    pin:SetAlpha(alphaFor(spot, p, now))
+    local ok
+    if mapType == "world" then
+      ok = HBDPins:AddWorldMapIconMap(MapPins, pin, mapID, spot.x, spot.y, HBD_PINS_WORLDMAP_SHOW_PARENT)
+    else
+      ok = HBDPins:AddMinimapIconMap(MapPins, pin, mapID, spot.x, spot.y, true, false)
+    end
+    if ok then pin:Show() else release(mapType, key) end
+  else
+    release(mapType, key)
+  end
+end
+
+local function buildZone(mapType, mapID)
+  local nl = nodeLog()
+  local zone = nl and nl:GetZone(mapID)
+  if not zone then return end
+  local p, now = cfg(), time()
+  for spotKey, spot in pairs(zone) do
+    updatePin(mapType, mapID, spotKey, spot, p, now)
+  end
+end
+
+local function currentZone()
+  return C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player") or nil
+end
+
+-- Minimap pins exist only for the player's current zone.
+local function syncMinimap()
+  local id = currentZone()
+  if id == minimapZone then return end
+  for key, pin in pairs(active.minimap) do
+    if pin.mapID == minimapZone then release("minimap", key) end
+  end
+  minimapZone = id
+  if id then buildZone("minimap", id) end
+end
+
+-- World map pins exist only for zones the map has shown: the viewed zone and
+-- its direct children (HBD shows child pins in their parent).
+local function ensureWorldZone(mapID)
+  if not mapID or worldBuilt[mapID] then return end
+  worldBuilt[mapID] = true
+  buildZone("world", mapID)
+end
+
+local function syncWorldMap()
+  if not WorldMapFrame or not WorldMapFrame.GetMapID then return end
+  local mapID = WorldMapFrame:GetMapID()
+  if not mapID then return end
+  ensureWorldZone(mapID)
+  local children = C_Map and C_Map.GetMapChildrenInfo and C_Map.GetMapChildrenInfo(mapID, nil, false)
+  for _, child in ipairs(children or {}) do
+    ensureWorldZone(child.mapID)
   end
 end
 
 function MapPins:Rebuild()
-  if not self:IsEnabled() then return end
+  if not HBDPins or not self:IsEnabled() then return end
   releaseAll()
-  local nl = nodeLog()
-  if not nl then return end
-  for _, mapID in ipairs(nl:GetZones()) do
-    for spotKey, spot in pairs(nl:GetZone(mapID)) do
-      updateSpot(mapID, spotKey, spot)
-    end
-  end
+  syncMinimap()
+  syncWorldMap()
 end
 
 function MapPins:OnNodeLogChanged(mapID, spotKey)
@@ -245,22 +286,37 @@ function MapPins:OnNodeLogChanged(mapID, spotKey)
   end
   local nl = nodeLog()
   local zone = nl and nl:GetZone(mapID)
-  updateSpot(mapID, spotKey, zone and zone[spotKey] or nil)
+  local spot = zone and zone[spotKey] or nil
+  local p, now = cfg(), time()
+  if worldBuilt[mapID] then updatePin("world", mapID, spotKey, spot, p, now) end
+  if mapID == minimapZone then updatePin("minimap", mapID, spotKey, spot, p, now) end
 end
 
 ---------------------------------------------------------------------------
 -- Lifecycle
 ---------------------------------------------------------------------------
 
+local worldHooked
+
 function MapPins:OnEnable()
   if not HBDPins then return end
   HB:Listen(self, "HB_NODELOG_CHANGED", self.OnNodeLogChanged)
+  local function onZone() HB:SafeCall("MapPins", syncMinimap) end
+  self:RegisterEvent("ZONE_CHANGED_NEW_AREA", onZone)
+  self:RegisterEvent("ZONE_CHANGED", onZone)
+  self:RegisterEvent("PLAYER_ENTERING_WORLD", onZone)
+  if not worldHooked and WorldMapFrame and WorldMapFrame.OnMapChanged then
+    worldHooked = true
+    hooksecurefunc(WorldMapFrame, "OnMapChanged", function()
+      if MapPins:IsEnabled() then HB:SafeCall("MapPins", syncWorldMap) end
+    end)
+  end
   self:Rebuild()
 end
 
 function MapPins:OnDisable()
   self:UnregisterAllMessages()
-  if not HBDPins then return end
+  self:UnregisterAllEvents()
   releaseAll()
 end
 
