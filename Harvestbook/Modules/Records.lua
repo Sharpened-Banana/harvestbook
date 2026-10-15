@@ -5,7 +5,7 @@ local ADDON, ns = ...
 --
 -- Messages sent: HB_RECORD_BROKEN(name, value) when a record that already
 -- existed is beaten (never for the very first value), with name one of
--- "bestGph", "biggestNode", "longest", "mostNodes"; HB_RECORDS_CHANGED()
+-- "bestGph", "longest", "mostNodes"; HB_RECORDS_CHANGED()
 -- after a session is deleted (BestSpot listens to it).
 --
 -- Records are NOT recomputed when a session is deleted: they are personal
@@ -107,19 +107,13 @@ function Records:OnGather(gather)
     mine = {}
     byChar[charKey] = mine
   end
-  local priceFn = HB.Pricing:Fn()
-  local bestItem, bestValue, total = nil, -1, 0
   for _, it in ipairs(gather.items or {}) do
     local id, n = it.itemID, it.count or 0
     if id and n > 0 then
       life[id] = (life[id] or 0) + n
       mine[id] = (mine[id] or 0) + n
-      local v = (priceFn(id, it.quality, it.link) or 0) * n
-      total = total + v
-      if v > bestValue then bestValue, bestItem = v, id end
     end
   end
-  setRecord("biggestNode", total, { time = time(), itemID = bestItem })
 end
 
 function Records:OnSession(state, s)
@@ -222,10 +216,8 @@ local function recordLines()
   local function line(name, rec, fmt, extra)
     return { label = name, value = rec and rec.value and (fmt(rec.value) .. (extra or "")) or DASH }
   end
-  local nodeExtra = r.biggestNode and r.biggestNode.itemID and (" (" .. itemName(r.biggestNode.itemID) .. ")") or ""
   return {
     line("Best gold/hr (10+ min)", r.bestGph, function(v) return money(v) .. "/hr" end),
-    line("Biggest single node", r.biggestNode, money, nodeExtra),
     line("Longest session", r.longest, Format.Duration),
     line("Most nodes in a session", r.mostNodes, Format.Thousands),
   }
