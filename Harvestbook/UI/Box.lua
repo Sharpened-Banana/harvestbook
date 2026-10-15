@@ -684,8 +684,9 @@ local function onTooltipShow(tt)
   local gr, gg, gb = Theme:Color("gold")
   local r, g, b = Theme:Color("grey")
   tt:AddLine("Harvestbook", gr, gg, gb)
-  local ok, gph, hasSession = pcall(sessionGoldPerHour)
-  if ok and hasSession then
+  -- SafeCall returns fn's results, or nil on error (reported, not raised).
+  local gph, hasSession = HB:SafeCall("UI", sessionGoldPerHour)
+  if hasSession then
     local text = gph and ns.Format.Money(gph, profile().goldStyle) or "\226\128\148"
     tt:AddDoubleLine("Gold/hr:", text, 1, 1, 1, 1, 1, 1)
   end
