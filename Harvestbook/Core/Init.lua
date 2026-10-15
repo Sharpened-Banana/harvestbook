@@ -240,6 +240,7 @@ function HB:OnInitialize()
   self:InitModuleStates()
 
   if self.InitOptions then self:InitOptions() end -- Core/Options.lua: profiles tab + Blizzard Settings
+  if self.UI and self.UI.Init then self.UI:Init() end -- UI/Box.lua: minimap button, companion
 
   self:RegisterChatCommand("hb", "OnSlash")
   self:RegisterChatCommand("harvestbook", "OnSlash")

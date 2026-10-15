@@ -19,3 +19,14 @@ In-game checks for code that cannot run under the unit test runner.
 - [ ] Price source slots: choosing a source swaps it with the slot; all four always remain
 - [ ] Export string → Import on another profile → confirm popup → settings applied
 - [ ] Reset all data: two confirmations, then reload prompt; after reload Node Log / sessions empty
+
+## Box, companion, minimap button (Task 11)
+- [ ] Box opens via `/hb`, minimap button, Addon Compartment; matches TackleBox layout (compare with screenshot in spec §5.1)
+- [ ] Drag, resize, close, Escape, reopen restores page/size
+- [ ] Companion toggles via right-click minimap; scale/alpha/lock from Window page work
+- [ ] Keybindings (Esc → Options → Keybindings → AddOns → Harvestbook) toggle the box and companion
+- [ ] Double-clicking the gold tab under the title bar collapses to the title bar and expands again
+- [ ] Settings page: turning Node Log off greys Map Pins / Best Spot with "Requires Node Log"; "All options…" opens the options dialog
+- [ ] Companion X hides it; with "Show automatically when gathering" on, the next gather shows it again
+- [ ] "Hide when no session is active": companion hides after `/hb stop`, shows on next session start
+- [ ] Minimap tooltip shows Gold/hr while a session exists; "Show minimap button" option hides/shows it
