@@ -66,3 +66,12 @@ In-game checks for code that cannot run under the unit test runner.
 - [ ] Beating an existing record (not the first value) fires an alarm/HB_RECORD_BROKEN
 - [ ] Records page readable at 700x500 (no clipped columns)
 - [ ] After Delete session, the page returns to the history list
+
+## Task 16: Best Spot
+- [ ] Zones ranking after two sessions in different zones
+- [ ] Spot click sets waypoint and opens map
+- [ ] Metric dropdown re-sorts zones and is hidden for the Spots scope; scope/metric persist across /reload
+- [ ] Rows under 15 min (zones) or 5 gathers (spots) are grey with "(low data)" and sort last
+- [ ] Empty zone shows "No spots recorded in this zone yet."
+- [ ] Best Spot readable at 700×500
+- [ ] **Verify:** ColumnList renders `|cff9d9d9d` color escapes in cells; Format.Money output also greys with them

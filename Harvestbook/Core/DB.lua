@@ -43,6 +43,7 @@ HB.defaults = {
     alarms = deepcopy(ns.AlarmEval.DEFAULTS),
     goals = { list = {} },
     minimap = { hide = false },
+    bestspot = { scope = "zones", metric = "gph" },
     goldStyle = "gold",
     debug = false,
   },
