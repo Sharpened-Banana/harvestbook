@@ -21,6 +21,7 @@ Logic\GoalEval.lua
 Logic\AlarmEval.lua
 Logic\Migrate.lua
 Logic\GatherParse.lua
+Logic\Base64.lua
 
 Core\Init.lua
 Core\DB.lua
