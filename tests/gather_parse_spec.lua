@@ -66,4 +66,14 @@ describe("GatherParse", function()
     assert.are.equal("4", a)
     assert.are.equal("[Silverleaf]", b)
   end)
+
+  it("IsBonusLoot: a Venom Clot within the window of a gather", function()
+    assert.is_true(GP.IsBonusLoot(274777, 1100, 1000))
+    assert.is_true(GP.IsBonusLoot(274777, 1180, 1000))
+    assert.is_false(GP.IsBonusLoot(274777, 1181, 1000)) -- too long after
+    assert.is_false(GP.IsBonusLoot(274777, 999, 1000))  -- before the gather
+    assert.is_false(GP.IsBonusLoot(274777, 1100, nil))  -- no gather yet
+    assert.is_false(GP.IsBonusLoot(12345, 1100, 1000))  -- not a bonus item
+    assert.is_false(GP.IsBonusLoot(nil, 1100, 1000))
+  end)
 end)

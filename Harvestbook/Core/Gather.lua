@@ -15,6 +15,9 @@ local ADDON, ns = ...
 --     lines are aggregated and fired once CHAT_WAIT s later (objectID/npcID nil).
 --     Lines are buffered from the cast onward, because with instant auto-loot
 --     they arrive before the LOOT_WAIT timeout expires.
+--   CHAT_MSG_LOOT of a GatherParse.BONUS_ITEMS item within BONUS_WINDOW s of
+--     the last fired gather -> HB_BONUS_LOOT { time, kind, mapID, x, y, items }
+--     (loot pushed after the gather, e.g. Neutralized Venom Clot; never a node).
 
 local HB = ns.HB
 local GatherParse = ns.GatherParse
@@ -30,6 +33,7 @@ LibStub("AceTimer-3.0"):Embed(Gather)
 local function secret(v) return issecretvalue and issecretvalue(v) end
 
 local lastFiredCastGUID -- castGUID of the last snapshot fired on LOOT_CLOSED
+local lastGather        -- { time, kind, mapID, x, y } of the last fired gather
 local pending        -- { kind, time, targetName, castGUID, snapshot, items, objectID, npcID, mapID, x, y, chat }
 local lootTimer, chatTimer
 local matcher
@@ -142,6 +146,7 @@ local function fire(p, via)
     items = p.items,
   }
   if debugOn() then HB:Msg("%s%s", describe(payload), via and (" via " .. via) or "") end
+  lastGather = { time = payload.time, kind = payload.kind, mapID = payload.mapID, x = payload.x, y = payload.y }
   HB:SendMessage("HB_NODE_GATHERED", payload)
 end
 
@@ -366,12 +371,34 @@ function Gather:LOOT_CLOSED(event)
   fire(p)
 end
 
+-- A bonus item counts as loot of the last gather, even while a new cast is
+-- pending (its puddle can be reached after the next node is started).
+local function fireBonus(link, count)
+  local items = {}
+  addItem(items, link, count)
+  if #items == 0 then return end
+  local payload = {
+    time = time(), kind = lastGather.kind,
+    mapID = lastGather.mapID, x = lastGather.x, y = lastGather.y,
+    items = items, bonus = true,
+  }
+  if debugOn() then
+    HB:Msg("HB_BONUS_LOOT %s item=%d x%d", tostring(payload.kind), items[1].itemID, items[1].count)
+  end
+  HB:SendMessage("HB_BONUS_LOOT", payload)
+end
+
 function Gather:CHAT_MSG_LOOT(event, text)
-  local p = pending
-  if not p or p.snapshot or not p.chat then return end
   if secret(text) or type(text) ~= "string" then return end
   local link, count = parseLootLine(text, getChatPatterns())
-  if link then addItem(p.chat, link, count) end
+  if not link then return end
+  if lastGather and GatherParse.IsBonusLoot(itemIDFromLink(link), time(), lastGather.time) then
+    fireBonus(link, count)
+    return
+  end
+  local p = pending
+  if not p or p.snapshot or not p.chat then return end
+  addItem(p.chat, link, count)
 end
 
 -- Registration: handlers run protected so a failure never escapes.

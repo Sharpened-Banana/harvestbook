@@ -413,6 +413,19 @@ function Session:OnGather(payload)
   refreshAll()
 end
 
+-- Loot pushed after a gather (HB_BONUS_LOOT): materials and value only, not
+-- a node, and it never starts a session.
+function Session:OnBonusLoot(payload)
+  if type(payload) ~= "table" then return end
+  local s = cur()
+  if not s then return end
+  local fn = priceFn()
+  if not SessionMath.AddGather(s, { mapID = payload.mapID, items = payload.items }, time(), fn) then return end
+  logGather(payload, fn)
+  save()
+  refreshAll()
+end
+
 function Session:OnRareFound(itemID)
   lastRare = itemID
   HB.UI:RefreshCompanion()
@@ -825,6 +838,7 @@ function Session:OnEnable()
   end
 
   HB:Listen(self, "HB_NODE_GATHERED", self.OnGather)
+  HB:Listen(self, "HB_BONUS_LOOT", self.OnBonusLoot)
   HB:Listen(self, "HB_PRICES_UPDATED", refreshAll)
   HB:Listen(self, "HB_RARE_FOUND", self.OnRareFound)
   HB:Listen(self, "HB_MODULE_TOGGLED", function(_, name)
