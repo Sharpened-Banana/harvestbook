@@ -60,16 +60,39 @@ local function itemIcon(itemID)
   return C_Item and C_Item.GetItemIconByID and C_Item.GetItemIconByID(itemID) or nil
 end
 
-local function qualityAtlas(quality)
-  if type(quality) == "number" then
-    return "Professions-Icon-Quality-Tier" .. quality .. "-Small"
+-- Quality badges come from the game (12.1+ GetItemReagentQualityInfo), so
+-- Midnight's Silver / Gold tiers show their own icons. Cached per item key;
+-- older clients fall back to the Dragonflight tier atlas.
+local qualityIcons = {} -- [itemKey] = { small = atlas|false, chat = atlas|false }
+
+local function qualityInfo(row)
+  local key = SessionMath.ItemKey(row.itemID, row.quality)
+  local c = qualityIcons[key]
+  if c then return c end
+  c = { small = false, chat = false }
+  local api = C_TradeSkillUI
+  if api and api.GetItemReagentQualityInfo then
+    local ok, info = pcall(api.GetItemReagentQualityInfo, row.link or row.itemID)
+    if ok and type(info) == "table" then
+      c.small = type(info.iconSmall) == "string" and info.iconSmall or false
+      c.chat = type(info.iconChat) == "string" and info.iconChat or c.small
+    end
+  elseif type(row.quality) == "number" then
+    c.small = "Professions-Icon-Quality-Tier" .. row.quality .. "-Small"
+    c.chat = c.small
   end
-  return nil
+  -- A tiered item whose info isn't loaded yet is asked again next refresh.
+  if c.small or type(row.quality) ~= "number" then qualityIcons[key] = c end
+  return c
+end
+
+local function qualityAtlas(row)
+  return qualityInfo(row).small or nil
 end
 
 -- Inline quality badge for font strings ("" for items without a quality).
-local function qualityMarkup(quality, size)
-  local atlas = qualityAtlas(quality)
+local function qualityMarkup(row, size)
+  local atlas = qualityInfo(row).chat
   if not atlas then return "" end
   return string.format(" |A:%s:%d:%d|a", atlas, size, size)
 end
@@ -444,7 +467,7 @@ end
 
 local function cellText(row, key)
   if key == "name" then
-    return row.name, itemIcon(row.itemID), qualityAtlas(row.quality)
+    return row.name, itemIcon(row.itemID), qualityAtlas(row)
   elseif key == "count" then
     return Format.Thousands(row.count)
   elseif key == "perHour" then
@@ -747,7 +770,7 @@ local function refreshMaterialsTab(f)
   for i, r in ipairs(f.rows) do
     local row = rows[i]
     if row then
-      local text = "x" .. Format.Thousands(row.count) .. qualityMarkup(row.quality, 14)
+      local text = "x" .. Format.Thousands(row.count) .. qualityMarkup(row, 14)
       setIconRow(r, itemIcon(row.itemID), text, money(row.value))
     else
       setIconRow(r, nil)
