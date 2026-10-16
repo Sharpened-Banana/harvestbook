@@ -157,6 +157,18 @@ local function pricingArgs()
       priceOrderChanged()
     end,
   }
+  args.ahCut = {
+    type = "toggle",
+    order = 11,
+    width = "full",
+    name = "Subtract the auction house cut (5%)",
+    desc = "Auctionator and TSM prices are listing prices. On: they count 95% of that, what a sale actually pays. Vendor prices and manual overrides are not changed.",
+    get = function() return HB.db.profile.pricing.ahCut end,
+    set = function(_, value)
+      HB.db.profile.pricing.ahCut = value and true or false
+      HB:SendMessage("HB_PRICES_UPDATED")
+    end,
+  }
   return args
 end
 

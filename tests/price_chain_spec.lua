@@ -79,4 +79,17 @@ describe("PriceChain", function()
     assert.are.equal(3, c)
     assert.are.equal("real", n)
   end)
+
+  it("AfterCut takes 5% off auction sources only when on", function()
+    assert.are.equal(950, P.AfterCut(1000, "auctionator", true))
+    assert.are.equal(950, P.AfterCut(1000, "tsm", true))
+    assert.are.equal(1000, P.AfterCut(1000, "vendor", true))
+    assert.are.equal(1000, P.AfterCut(1000, "override", true))
+    assert.are.equal(1000, P.AfterCut(1000, "tsm", false))
+    assert.are.equal(0, P.AfterCut(0, "none", true))
+  end)
+
+  it("AfterCut floors to whole copper", function()
+    assert.are.equal(9, P.AfterCut(10, "tsm", true)) -- 9.5 -> 9
+  end)
 end)

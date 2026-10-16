@@ -6,6 +6,8 @@ local ADDON, ns = ...
 -- (login / session start, entries older than an hour) and SetOverride
 -- replace them, so a known price is never re-queried during gathering.
 -- Unpriced items are not cached and are re-resolved on each Get.
+-- The cache holds listing prices; Get applies the optional auction house cut
+-- (profile.pricing.ahCut) on the way out, so toggling it needs no re-query.
 
 local HB = ns.HB
 local PriceChain = ns.PriceChain
@@ -96,6 +98,10 @@ end
 -- vendor price is available from the item cache). A provisional price is
 -- returned but not cached (and leaves any existing entry alone), so the
 -- better source is asked again next time.
+local function net(copper, source)
+  return PriceChain.AfterCut(copper, source, HB.db.profile.pricing.ahCut)
+end
+
 local function resolveAndCache(self, itemID, quality, link)
   local sources = self:Sources()
   local copper, source = PriceChain.Resolve(itemID, quality, link, sources)
@@ -114,9 +120,10 @@ function Pricing:Get(itemID, quality, link)
   if not itemID then return 0, "none" end
   local cached = HB.db.global.prices[ItemKey(itemID, quality)]
   if cached and type(cached.value) == "number" and cached.value > 0 then
-    return cached.value, cached.source
+    return net(cached.value, cached.source), cached.source
   end
-  return resolveAndCache(self, itemID, quality, link)
+  local copper, source = resolveAndCache(self, itemID, quality, link)
+  return net(copper, source), source
 end
 
 -- Cache entry (or nil) for UI: { value, source, time }.

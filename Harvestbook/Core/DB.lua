@@ -35,7 +35,7 @@ HB.defaults = {
       autoResume = true,
       sortKey = "value",
     },
-    pricing = { order = { "override", "auctionator", "tsm", "vendor" }, tsmString = "DBMarket" },
+    pricing = { order = { "override", "auctionator", "tsm", "vendor" }, tsmString = "DBMarket", ahCut = false },
     pins = {
       world = true, minimap = false, -- minimap off: the game's own tracking shows nodes there
       kinds = { herb = true, ore = true, skin = true },
