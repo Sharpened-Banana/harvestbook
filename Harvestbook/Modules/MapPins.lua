@@ -215,7 +215,9 @@ local function updatePin(mapType, mapID, spotKey, spot, p, now)
     pin.mapID, pin.spotKey = mapID, spotKey
     pin:SetSize(p.size, p.size)
     pin.icon:SetTexture(Theme.ICONS and Theme.ICONS[spot.kind])
-    pin:SetAlpha(alphaFor(spot, p, now))
+    local alpha = alphaFor(spot, p, now)
+    if mapType == "minimap" then alpha = alpha * (p.minimapAlpha or 0.6) end
+    pin:SetAlpha(alpha)
     local ok
     if mapType == "world" then
       ok = HBDPins:AddWorldMapIconMap(MapPins, pin, mapID, spot.x, spot.y, HBD_PINS_WORLDMAP_SHOW_PARENT)
@@ -379,6 +381,13 @@ HB:AddOptions("mappins", {
       min = 1, max = 90, step = 1,
       get = function() return cfg().fadeDays end,
       set = function(_, v) cfg().fadeDays = v; rebuild() end,
+    },
+    minimapAlpha = {
+      type = "range", order = 33, name = "Minimap pin opacity",
+      desc = "Lower values let the game's own minimap node icons show through Harvestbook's pins.",
+      min = 0.1, max = 1, step = 0.05, isPercent = true,
+      get = function() return cfg().minimapAlpha or 0.6 end,
+      set = function(_, v) cfg().minimapAlpha = v; rebuild() end,
     },
     size = {
       type = "range", order = 32, name = "Pin size",

@@ -16,6 +16,7 @@ function M.New(now)
     started = now,
     lastResume = now,
     activeSeconds = 0,
+    activeAtLast = 0, -- active seconds at the last gather (or start / resume)
     zones = {},
     zoneSeconds = {},
     zoneCopper = {},
@@ -59,6 +60,8 @@ function M.Resume(s, now)
   s.state = "running"
   s.lastResume = now
   s.zoneSince = now
+  s.activeAtLast = s.activeSeconds
+  s.zoneAtLast = s.currentMap and s.zoneSeconds[s.currentMap] or nil
 end
 
 function M.Checkpoint(s, now)
@@ -82,6 +85,12 @@ function M.ActiveSeconds(s, now)
     if d > 0 then a = a + d end
   end
   return a
+end
+
+-- Active (unpaused, online) seconds since the last gather, start or resume.
+function M.IdleSeconds(s, now)
+  local a = M.ActiveSeconds(s, now)
+  return math.max(0, a - (s.activeAtLast or a))
 end
 
 function M.NodeValue(gather, priceFn)
@@ -114,6 +123,12 @@ function M.AddGather(s, gather, now, priceFn)
   if gather.kind then
     s.nodes[gather.kind] = (s.nodes[gather.kind] or 0) + 1
   end
+  s.activeAtLast = M.ActiveSeconds(s, now)
+  if s.currentMap then
+    local z = s.zoneSeconds[s.currentMap] or 0
+    if s.zoneSince and now > s.zoneSince then z = z + (now - s.zoneSince) end
+    s.zoneAtLast = z
+  end
   if mapID then
     s.zones[mapID] = (s.zones[mapID] or 0) + 1
     s.zoneCopper[mapID] = (s.zoneCopper[mapID] or 0) + M.NodeValue(gather, priceFn)
@@ -121,11 +136,20 @@ function M.AddGather(s, gather, now, priceFn)
   return true
 end
 
-function M.Stop(s, now, priceFn)
+-- trim = true ends the session's time at its last gather (or start / resume),
+-- dropping the idle tail: used when it ends on its own (idle, next login).
+function M.Stop(s, now, priceFn, trim)
   if s.state == "stopped" then return end
   if s.state == "running" then
     foldRunning(s, now)
     closeSegment(s, now)
+  end
+  if trim and s.activeAtLast and s.activeAtLast < s.activeSeconds then
+    s.activeSeconds = s.activeAtLast
+    local m = s.currentMap
+    if m and s.zoneAtLast and s.zoneSeconds[m] and s.zoneAtLast < s.zoneSeconds[m] then
+      s.zoneSeconds[m] = s.zoneAtLast
+    end
   end
   s.state = "stopped"
   for key, e in pairs(s.items) do

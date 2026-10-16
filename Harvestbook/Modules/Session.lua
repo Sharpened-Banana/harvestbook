@@ -1,7 +1,7 @@
 local ADDON, ns = ...
 
 -- Session module (spec §4.1): start/pause/resume/stop, auto-start on the first
--- gather, auto-pause (instance, mailbox, auction house, AFK) with optional
+-- gather, auto-stop after idle minutes and at the next login, auto-pause (instance, mailbox, auction house, AFK) with optional
 -- auto-resume, the Session page (materials list, totals, footer, chat post)
 -- and the companion Session / Materials / Log tabs.
 --
@@ -104,7 +104,10 @@ end
 
 local refreshTotals -- page totals strip (defined with the page)
 
+local checkIdle -- auto-stop after idle minutes (defined with session state)
+
 local function onTick()
+  if checkIdle() then return end
   updateStatus()
   if pageBody and pageBody:IsVisible() then refreshTotals(pageBody) end
   HB.UI:RefreshCompanion()
@@ -245,16 +248,40 @@ function Session:Resume()
   changed("running", s)
 end
 
-function Session:Stop()
+-- trim = true ends the session's time at its last gather (automatic stops).
+local function finish(trim)
   local s = cur()
-  if not s then
-    HB:Msg("no session to stop.")
-    return
-  end
-  SessionMath.Stop(s, time(), priceFn())
+  SessionMath.Stop(s, time(), priceFn(), trim)
   local kept = archive(s)
   HB.char.current = nil
   changed("stopped", kept and s or nil) -- empty sessions are discarded
+  return kept
+end
+
+function Session:Stop()
+  if not cur() then
+    HB:Msg("no session to stop.")
+    return
+  end
+  finish(false)
+end
+
+checkIdle = function()
+  local s, opts = cur(), profile().session
+  if not (s and s.state == "running" and opts.idleStop) then return false end
+  local minutes = opts.idleMinutes or 5
+  if SessionMath.IdleSeconds(s, time()) < minutes * 60 then return false end
+  if finish(true) then
+    HB:Msg(string.format("session ended after %d min without a gather (saved to history).", minutes))
+  end
+  return true
+end
+
+-- First load after logging in: a session left over from the last login ends
+-- at its last gather and goes to history (a /reload keeps it running).
+local function closeLeftover()
+  if not cur() or profile().session.keepOnLogout then return end
+  if finish(true) then HB:Msg("your session from the last login was saved to history.") end
 end
 
 function Session:Reset()
@@ -770,7 +797,8 @@ function Session:OnEnable()
     if name == "Goals" then HB.UI:RefreshCompanion() end -- goal bars
   end)
 
-  onEvent("PLAYER_ENTERING_WORLD", function()
+  onEvent("PLAYER_ENTERING_WORLD", function(isInitialLogin)
+    if isInitialLogin then closeLeftover() end
     setCondition("instance", IsInInstance() and true or false)
   end)
   onEvent("MAIL_SHOW", function() setCondition("mail", true) end)

@@ -26,10 +26,11 @@ HB.defaults = {
     companion = {
       shown = true,
       tabs = { session = true, materials = true, log = true },
-      scale = 1, alpha = 0.9, locked = false, autoShow = true, hideNoSession = false,
+      scale = 1, alpha = 0.9, locked = false, autoShow = true, hideNoSession = true,
     },
     session = {
       autoStart = true,
+      idleStop = true, idleMinutes = 5, keepOnLogout = false,
       pause = { instance = true, mail = true, ah = true, afk = true },
       autoResume = true,
       sortKey = "value",
@@ -38,7 +39,7 @@ HB.defaults = {
     pins = {
       world = true, minimap = true,
       kinds = { herb = true, ore = true, skin = true },
-      minGathers = 1, fadeDays = 14, size = 14,
+      minGathers = 1, fadeDays = 14, size = 14, minimapAlpha = 0.6,
     },
     alarms = deepcopy(ns.AlarmEval.DEFAULTS),
     goals = { list = {} },

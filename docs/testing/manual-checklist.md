@@ -54,6 +54,10 @@ Every "Verify:" item below, by section (the original entries stay in their secti
 - [ ] `/reload` mid-session → session continues, offline time not added
 - [ ] Open mailbox → status Paused; close → resumes
 - [ ] Stop → appears in Records history
+- [ ] Gather once, then wait 5 min without gathering → session ends on its own, chat says it was saved; its time in Records ends at the last gather
+- [ ] Companion appears on the first gather and hides when the session ends
+- [ ] Gather, log out, log back in → chat says last login's session was saved to history; no session running until the next gather
+- [ ] Same with "Keep the session across logouts" on → session continues after login
 - [ ] Toggle Session off → page/tabs vanish; on → session data intact
 - [ ] **Verify:** quality badge atlas `Professions-Icon-Quality-Tier<q>-Small` renders for tier 1/2 reagents
 - [ ] **Verify:** Post to chat menu greys Party/Guild when not grouped / guildless; Say posts the one-line summary
@@ -69,6 +73,7 @@ Every "Verify:" item below, by section (the original entries stay in their secti
 
 ## Map Pins (Task 14)
 - [ ] Pins on world map + minimap after gathering
+- [ ] Minimap pins are see-through (60% by default) so the game's own node icons show underneath; the opacity slider changes them at once; world map pins stay solid
 - [ ] Tooltip matches spec (gold node name, "N gathers here · Xg per hour", top 4 items, grey hint; imported cells say "Imported from GatherMate2")
 - [ ] Shift-right-click forgets (pin disappears from world map and minimap)
 - [ ] Old pins faded (temporarily set fade days to 1 and edit lastSeen via `/run`)
