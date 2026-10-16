@@ -341,6 +341,16 @@ HB.options = {
           type = "group", inline = true, order = 3, name = "Session",
           args = {
             autoStart = sessionToggle(1, "Start a session on the first gather", nil, "autoStart"),
+            idleStop = sessionToggle(1.1, "End the session when I stop gathering",
+              "Ends the session after the minutes below without a gather. Its time ends at the last gather, so idle minutes don't lower gold/hr.", "idleStop"),
+            idleMinutes = {
+              type = "range", order = 1.2, name = "Minutes without a gather", min = 1, max = 60, step = 1,
+              disabled = function() return not HB.db.profile.session.idleStop end,
+              get = function() return HB.db.profile.session.idleMinutes or 5 end,
+              set = function(_, v) HB.db.profile.session.idleMinutes = v end,
+            },
+            keepOnLogout = sessionToggle(1.3, "Keep the session across logouts",
+              "Off: a session still open when you log out is saved to history at your next login. /reload never ends a session.", "keepOnLogout"),
             instance = sessionToggle(2, "Pause in instances", nil, "pause", "instance"),
             mail = sessionToggle(3, "Pause at the mailbox", nil, "pause", "mail"),
             ah = sessionToggle(4, "Pause at the auction house", nil, "pause", "ah"),
