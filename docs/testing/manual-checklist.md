@@ -60,7 +60,7 @@ Every "Verify:" item below, by section (the original entries stay in their secti
 - [ ] Gather, log out, log back in → chat says last login's session was saved to history; no session running until the next gather
 - [ ] Same with "Keep the session across logouts" on → session continues after login
 - [ ] Toggle Session off → page/tabs vanish; on → session data intact
-- [ ] **Verify:** quality badge atlas `Professions-Icon-Quality-Tier<q>-Small` renders for tier 1/2 reagents
+- [ ] **Verify:** Silver and Gold reagents show Midnight's own Silver / Gold badges (from `C_TradeSkillUI.GetItemReagentQualityInfo`) on the Session page and the companion Materials tab
 - [ ] **Verify:** Post to chat menu greys Party/Guild when not grouped / guildless; Say posts the one-line summary
 
 ## Node Log (Task 13)

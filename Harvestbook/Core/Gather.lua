@@ -75,10 +75,21 @@ local function itemIDFromLink(link)
   return tonumber(string.match(link, "item:(%d+)"))
 end
 
+-- 12.1+: GetItemReagentQualityInfo (Midnight's Silver / Gold tiers); older
+-- clients: GetItemReagentQualityByItemInfo.
 local function reagentQuality(link)
-  if not (C_TradeSkillUI and C_TradeSkillUI.GetItemReagentQualityByItemInfo) then return nil end
-  local ok, q = pcall(C_TradeSkillUI.GetItemReagentQualityByItemInfo, link)
-  if ok and type(q) == "number" and not secret(q) then return q end
+  local api = C_TradeSkillUI
+  if not api then return nil end
+  if api.GetItemReagentQualityInfo then
+    local ok, info = pcall(api.GetItemReagentQualityInfo, link)
+    if ok and type(info) == "table" and type(info.quality) == "number" and not secret(info.quality) then
+      return info.quality
+    end
+  end
+  if api.GetItemReagentQualityByItemInfo then
+    local ok, q = pcall(api.GetItemReagentQualityByItemInfo, link)
+    if ok and type(q) == "number" and not secret(q) then return q end
+  end
   return nil
 end
 
