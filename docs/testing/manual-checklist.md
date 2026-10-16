@@ -73,7 +73,8 @@ Every "Verify:" item below, by section (the original entries stay in their secti
 - [ ] **Verify:** Forget zone StaticPopup passes the mapID through to OnAccept
 
 ## Map Pins (Task 14)
-- [ ] Pins on world map + minimap after gathering
+- [ ] Pins on the world map after gathering; none on the minimap by default (the game's own tracking icons only)
+- [ ] Map Pins → "Show on minimap" on → pins appear on the minimap; off → they vanish at once
 - [ ] Minimap pins are see-through (60% by default) so the game's own node icons show underneath; the opacity slider changes them at once; world map pins stay solid
 - [ ] Tooltip matches spec (gold node name, "N gathers here · Xg per hour", top 4 items, grey hint; imported cells say "Imported from GatherMate2")
 - [ ] Shift-right-click forgets (pin disappears from world map and minimap)
