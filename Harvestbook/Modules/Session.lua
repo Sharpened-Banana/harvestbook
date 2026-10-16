@@ -67,6 +67,13 @@ local function qualityAtlas(quality)
   return nil
 end
 
+-- Inline quality badge for font strings ("" for items without a quality).
+local function qualityMarkup(quality, size)
+  local atlas = qualityAtlas(quality)
+  if not atlas then return "" end
+  return string.format(" |A:%s:%d:%d|a", atlas, size, size)
+end
+
 local function ago(seconds)
   seconds = math.max(0, seconds or 0)
   if seconds < 60 then return string.format("%ds", seconds) end
@@ -740,7 +747,8 @@ local function refreshMaterialsTab(f)
   for i, r in ipairs(f.rows) do
     local row = rows[i]
     if row then
-      setIconRow(r, itemIcon(row.itemID), "x" .. Format.Thousands(row.count), money(row.value))
+      local text = "x" .. Format.Thousands(row.count) .. qualityMarkup(row.quality, 14)
+      setIconRow(r, itemIcon(row.itemID), text, money(row.value))
     else
       setIconRow(r, nil)
     end
