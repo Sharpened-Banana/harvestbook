@@ -56,6 +56,7 @@ Every "Verify:" item below, by section (the original entries stay in their secti
 - [ ] Stop → appears in Records history
 - [ ] Gather once, then wait 5 min without gathering → session ends on its own, chat says it was saved; its time in Records ends at the last gather
 - [ ] Companion appears on the first gather and hides when the session ends
+- [ ] Companion Materials tab shows the quality badge after the count for tiered reagents (none for items without a quality); two qualities of one reagent are separate rows
 - [ ] Gather, log out, log back in → chat says last login's session was saved to history; no session running until the next gather
 - [ ] Same with "Keep the session across logouts" on → session continues after login
 - [ ] Toggle Session off → page/tabs vanish; on → session data intact
