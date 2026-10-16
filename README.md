@@ -2,17 +2,18 @@
 
 An all-in-one gathering addon for World of Warcraft Retail (12.1.x) covering herbalism, mining and skinning. Its window is modelled on Angler's TackleBox: one tabbed box plus an optional small companion window.
 
-**Status:** v1 - not yet verified in-game; see `docs/testing/manual-checklist.md`.
+**Status:** 1.0.0 - first release; report problems with `/hb debug` output.
 
 ## Features
 
 Every module can be toggled in Settings. Disabling a module never deletes its data, and modules that depend on another grey out automatically.
 
-- **Session** - gold per hour and a materials list (counts, per hour, value). Auto-pauses at the mailbox, auction house, when AFK and in instances; survives `/reload`.
+- **Session** - gold per hour and a materials list (counts, quality, per hour, value). Starts on your first gather and ends after a few idle minutes, like TackleBox; auto-pauses at the mailbox, auction house, when AFK and in instances; survives `/reload`. Optional 5% auction house cut.
 - **Node Log** - per-zone log of every node gathered: names, counts, share and average items, with an item breakdown per node.
-- **Map Pins** - pins on the world map and minimap for logged nodes, with gold/hr tooltips and fading for old pins.
+- **Map Pins** - world map pins for logged nodes, with gold/hr tooltips and fading for old pins; optional see-through minimap pins (off by default).
 - **Best Spot** - ranks zones and individual spots by gold/hr or other metrics; click a spot to set a waypoint.
-- **Records** - best sessions, lifetime totals (per character or warband) and session history.
+- **Records** - best gold/hr, longest session and most nodes, lifetime totals (per character or warband) and session history.
+- **Coiled Isle** - Neutralized Venom Clots from Venomous nodes are counted with the gather.
 - **Goals** - session goals (materials, gold, minutes) and rare-drop attempt counters.
 - **Alarms** - sound and text alerts for valuable nodes, goals and broken records.
 
@@ -59,3 +60,11 @@ Layout under `Harvestbook/`:
 - `Modules/` - Session, NodeLog, MapPins, BestSpot, Records, Goals, Alarms.
 
 Design spec: `docs/superpowers/specs/2026-10-15-harvestbook-v1-design.md`.
+
+Release: `bash tools/release.sh --dry-run`, then `bash tools/release.sh --type release` (see the script header).
+
+## License
+
+Copyright (c) 2026 Sharpened Banana. All rights reserved.
+
+The libraries in `Harvestbook/libs/` (Ace3, CallbackHandler, LibStub, HereBeDragons, LibDataBroker, LibDBIcon) belong to their authors and are included under their own licenses.

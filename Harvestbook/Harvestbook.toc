@@ -3,7 +3,7 @@
 ## Title: Harvestbook
 ## Notes: Gathering session tracker, node log, map pins and goals for herbalism, mining and skinning.
 ## Author: Sharpened Banana
-## Version: 0.1.0
+## Version: 1.0.0
 ## Category: Professions
 ## IconTexture: Interface\Icons\Trade_Herbalism
 ## SavedVariables: HarvestbookDB
