@@ -56,7 +56,9 @@ Every "Verify:" item below, by section (the original entries stay in their secti
 - [ ] Stop → appears in Records history
 - [ ] Gather once, then wait 5 min without gathering → session ends on its own, chat says it was saved; its time in Records ends at the last gather
 - [ ] Companion appears on the first gather and hides when the session ends
-- [ ] Companion Materials tab shows the quality badge after the count for tiered reagents (none for items without a quality); two qualities of one reagent are separate rows
+- [ ] Companion Materials tab rows read "Name ◆ x12" (quality badge after the name for tiered reagents, none otherwise); two qualities of one reagent are separate rows; long names truncate before the value
+- [ ] Companion Log tab shows the quality badge after each item name
+- [ ] Options → Pricing → "Subtract the auction house cut (5%)" on → Auctionator/TSM prices and gold/hr drop 5% at once, vendor prices unchanged; Price tooltip says "after the 5% auction house cut"
 - [ ] Gather, log out, log back in → chat says last login's session was saved to history; no session running until the next gather
 - [ ] Same with "Keep the session across logouts" on → session continues after login
 - [ ] Toggle Session off → page/tabs vanish; on → session data intact

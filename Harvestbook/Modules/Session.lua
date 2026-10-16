@@ -488,6 +488,9 @@ local function showRowTooltip(row, rowFrame, cellKey)
     else
       local label = HB.Pricing.SOURCE_LABELS[row.source] or tostring(row.source)
       GameTooltip:AddDoubleLine("Source", label, 1, 0.82, 0, 1, 1, 1)
+      if profile().pricing.ahCut and ns.PriceChain.AH_SOURCES[row.source] then
+        GameTooltip:AddLine("after the 5% auction house cut", Theme:Color("grey"))
+      end
       local cached = HB.db.global.prices[row.itemKey]
       if cached and cached.time then
         GameTooltip:AddLine("cached " .. ago(time() - cached.time) .. " ago", Theme:Color("grey"))
@@ -770,7 +773,7 @@ local function refreshMaterialsTab(f)
   for i, r in ipairs(f.rows) do
     local row = rows[i]
     if row then
-      local text = "x" .. Format.Thousands(row.count) .. qualityMarkup(row, 14)
+      local text = itemName(row.itemID, row.link) .. qualityMarkup(row, 14) .. " x" .. Format.Thousands(row.count)
       setIconRow(r, itemIcon(row.itemID), text, money(row.value))
     else
       setIconRow(r, nil)
@@ -787,7 +790,7 @@ local function refreshLogTab(f)
     local e = gatherLog[i]
     if e then
       local item = e.item
-      local text = item and (itemName(item.itemID, item.link) .. " x" .. (item.count or 0)) or ""
+      local text = item and (itemName(item.itemID, item.link) .. qualityMarkup(item, 12) .. " x" .. (item.count or 0)) or ""
       setIconRow(r, Theme.ICONS[e.kind], text, date("%H:%M", e.time))
     else
       setIconRow(r, nil)
