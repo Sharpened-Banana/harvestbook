@@ -21,6 +21,7 @@ Every module can be toggled in Settings. Disabling a module never deletes its da
 - **Coiled Isle** - Neutralized Venom Clots from Venomous nodes are counted with the gather.
 - **Goals** - session goals (materials, gold, minutes) and rare-drop attempt counters.
 - **Alarms** - sound and text alerts for valuable nodes, goals and broken records.
+- **Translations** - German, French, Spanish, Brazilian Portuguese, Italian and Russian. They are machine-written and not yet checked by native speakers, so corrections are very welcome (`Harvestbook/Locale/`). Other languages show English.
 
 ## Install
 

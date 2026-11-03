@@ -207,3 +207,16 @@ Every "Verify:" item below, by section (the original entries stay in their secti
 - [ ] A large history (up to 500 sessions) opens without a noticeable hang
 - [ ] A zone or item name with a comma stays in one cell; a name starting with `=` shows as text
 - [ ] Records off: `/hb export` prints the notice, an open export window closes
+
+## Translations
+
+Switch the client language in the Battle.net launcher, or test with the `SET textLocale` line in `Config.wtf`.
+
+- [ ] deDE, frFR, esES/esMX, ptBR, itIT: every page's headers, buttons and dropdowns are translated and fit (Session totals, Alarms threshold row, Routes kind toggles, sidebar).
+- [ ] ruRU: titles, headings, body text, buttons and the companion show Cyrillic, no blanks or squares; the title font is the game's standard font.
+- [ ] koKR or zhCN: everything shows in English and the addon loads with no error.
+- [ ] `/hb help` lists translated text with the commands themselves unchanged, and each command still works.
+- [ ] Alarms: Test on each rule shows translated text; a sound chosen before switching language is still selected and plays; a real rare/goal/record alarm reads correctly.
+- [ ] Records > Export: the CSV headers and the gold "Week of" labels stay English while the dropdown text is translated.
+- [ ] Post to chat sends the translated line; settings Import failure shows a translated reason.
+- [ ] Settings panel (All options) names and descriptions are translated; profile export/import between languages keeps all settings.
