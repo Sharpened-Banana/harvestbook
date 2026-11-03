@@ -11,7 +11,7 @@ while IFS= read -r f; do
     echo "SYNTAX ERROR: $f"
     fail=1
   fi
-done < <(find Harvestbook/Core Harvestbook/Logic Harvestbook/UI Harvestbook/Modules -name '*.lua' 2>/dev/null | sort)
+done < <(find Harvestbook/Locale Harvestbook/Core Harvestbook/Logic Harvestbook/UI Harvestbook/Modules -name '*.lua' 2>/dev/null | sort)
 
 echo "== TOC entries"
 while IFS= read -r line || [ -n "$line" ]; do

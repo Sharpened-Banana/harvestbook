@@ -13,6 +13,9 @@
 
 embeds.xml
 
+Locale\Locale.lua
+Locale\enUS.lua
+
 Logic\Format.lua
 Logic\SessionMath.lua
 Logic\NodeGrid.lua

@@ -1,4 +1,5 @@
 local ADDON, ns = ...
+local L = ns.L
 
 -- The main window ("box", spec §5.1/§5.2): title bar, decorative gold tab,
 -- parchment sidebar with one button per registered page, content panel.
@@ -14,8 +15,8 @@ local Theme = ns.Theme
 local W = ns.Widgets
 
 BINDING_HEADER_HARVESTBOOK = "Harvestbook"
-BINDING_NAME_HARVESTBOOK_TOGGLE = "Toggle Harvestbook"
-BINDING_NAME_HARVESTBOOK_COMPANION = "Toggle companion"
+BINDING_NAME_HARVESTBOOK_TOGGLE = L["Toggle Harvestbook"]
+BINDING_NAME_HARVESTBOOK_COMPANION = L["Toggle companion"]
 
 local UI = {}
 HB.UI = UI
@@ -194,7 +195,7 @@ local function buildTitleBar(f)
   tab:SetScript("OnDoubleClick", function() setCollapsed(not f.collapsed) end)
   tab:SetScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-    GameTooltip:SetText("Double-click to " .. (f.collapsed and "expand" or "collapse"))
+    GameTooltip:SetText(f.collapsed and L["Double-click to expand"] or L["Double-click to collapse"])
     GameTooltip:Show()
   end)
   tab:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -544,25 +545,25 @@ local function buildWindowPage(body)
     return cb
   end
 
-  toggle("Show companion", "shown", function(on)
+  toggle(L["Show companion"], "shown", function(on)
     if UI.SetCompanionShown then UI:SetCompanionShown(on) end
   end)
-  toggle("Lock position", "locked", applyCompanion)
-  toggle("Show automatically when gathering", "autoShow")
-  toggle("Hide when no session is active", "hideNoSession", applyCompanion)
+  toggle(L["Lock position"], "locked", applyCompanion)
+  toggle(L["Show automatically when gathering"], "autoShow")
+  toggle(L["Hide when no session is active"], "hideNoSession", applyCompanion)
 
   y = y + 10
-  body.scale = makeSlider(body, "Scale", 0.5, 2, 0.05, percent,
+  body.scale = makeSlider(body, L["Scale"], 0.5, 2, 0.05, percent,
     function() return companionDB().scale or 1 end,
     function(v) companionDB().scale = v; applyCompanion() end)
   place(body.scale, 46, 4)
-  body.alpha = makeSlider(body, "Opacity", 0.2, 1, 0.05, percent,
+  body.alpha = makeSlider(body, L["Opacity"], 0.2, 1, 0.05, percent,
     function() return companionDB().alpha or 0.9 end,
     function(v) companionDB().alpha = v; applyCompanion() end)
   place(body.alpha, 46, 4)
 
   y = y + 6
-  local tabsHeading = W.Heading(body, "Companion tabs")
+  local tabsHeading = W.Heading(body, L["Companion tabs"])
   tabsHeading:SetPoint("TOPLEFT", body, "TOPLEFT", 0, -y)
   tabsHeading:SetPoint("RIGHT", body, "RIGHT", 0, 0)
   y = y + tabsHeading:GetHeight() + 8
@@ -620,7 +621,7 @@ local function missingDeps(name)
 end
 
 local function buildSettingsPage(body)
-  local heading = W.Heading(body, "Modules")
+  local heading = W.Heading(body, L["Modules"])
   heading:SetPoint("TOPLEFT", body, "TOPLEFT", 0, 0)
   heading:SetPoint("RIGHT", body, "RIGHT", 0, 0)
   local y = heading:GetHeight() + 8
@@ -647,15 +648,15 @@ local function buildSettingsPage(body)
   note:SetPoint("RIGHT", body, "RIGHT", 0, 0)
   note:SetJustifyH("LEFT")
   note:SetTextColor(Theme:Color("grey"))
-  note:SetText("Disabling a module never deletes its data.")
+  note:SetText(L["Disabling a module never deletes its data."])
 
-  local all = W.RedButton(body, "All options\226\128\166", function()
+  local all = W.RedButton(body, L["All options\226\128\166"], function()
     local dialog = LibStub("AceConfigDialog-3.0", true)
     local registry = LibStub("AceConfigRegistry-3.0", true)
     if dialog and registry and registry:GetOptionsTable(APP) then
       dialog:Open(APP)
     else
-      HB:Msg("options not available.")
+      HB:Msg(L["options not available."])
     end
   end)
   all:SetPoint("TOPLEFT", note, "BOTTOMLEFT", 0, -14)
@@ -669,9 +670,9 @@ local function refreshSettingsPage(body)
     cb:Refresh()
     cb:SetEnabled(available and #missing == 0)
     if not available then
-      cb.hint:SetText("Not loaded")
+      cb.hint:SetText(L["Not loaded"])
     elseif #missing > 0 then
-      cb.hint:SetText("Requires " .. table.concat(missing, ", "))
+      cb.hint:SetText(L["Requires %s"]:format(table.concat(missing, ", ")))
     else
       cb.hint:SetText("")
     end
@@ -679,12 +680,12 @@ local function refreshSettingsPage(body)
 end
 
 UI:RegisterPage({
-  id = "window", title = "Window", icon = Theme.ICONS.window, order = 90,
+  id = "window", title = L["Window"], icon = Theme.ICONS.window, order = 90,
   build = buildWindowPage, refresh = refreshWindowPage,
 })
 
 UI:RegisterPage({
-  id = "settings", title = "Settings", icon = Theme.ICONS.settings, order = 100,
+  id = "settings", title = L["Settings"], icon = Theme.ICONS.settings, order = 100,
   build = buildSettingsPage, refresh = refreshSettingsPage,
 })
 
@@ -708,10 +709,10 @@ local function onTooltipShow(tt)
   local gph, hasSession = HB:SafeCall("UI", sessionGoldPerHour)
   if hasSession then
     local text = gph and ns.Format.Money(gph, profile().goldStyle) or "\226\128\148"
-    tt:AddDoubleLine("Gold/hr:", text, 1, 1, 1, 1, 1, 1)
+    tt:AddDoubleLine(L["Gold/hr:"], text, 1, 1, 1, 1, 1, 1)
   end
-  tt:AddLine("Left-click: open", r, g, b)
-  tt:AddLine("Right-click: companion", r, g, b)
+  tt:AddLine(L["Left-click: open"], r, g, b)
+  tt:AddLine(L["Right-click: companion"], r, g, b)
 end
 
 local function initLauncher()

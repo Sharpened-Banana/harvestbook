@@ -1,4 +1,5 @@
 local ADDON, ns = ...
+local L = ns.L
 
 -- Core addon object: module toggling with dependencies, error isolation,
 -- chat output and slash commands. Saved data lives in Core/DB.lua.
@@ -24,8 +25,9 @@ HB.DEPENDS = {
 }
 
 HB.MODULE_LABELS = {
-  Session = "Session", NodeLog = "Node Log", Records = "Records", MapPins = "Map Pins",
-  BestSpot = "Best Spot", Routes = "Routes", Shopping = "Shopping", GearCompare = "Gear Comparison", Trends = "Trends", Goals = "Goals", Alarms = "Alarms",
+  Session = L["Session"], NodeLog = L["Node Log"], Records = L["Records"], MapPins = L["Map Pins"],
+  BestSpot = L["Best Spot"], Routes = L["Routes"], Shopping = L["Shopping"], GearCompare = L["Gear Comparison"],
+  Trends = L["Trends"], Goals = L["Goals"], Alarms = L["Alarms"],
 }
 
 local function label(name)
@@ -58,7 +60,7 @@ local function finish(moduleName, ok, ...)
     HB:Msg("%s error:\n%s", moduleName, tostring(trace))
   elseif not reported[moduleName] then
     reported[moduleName] = true
-    HB:Msg("%s error \226\128\148 see /hb debug", moduleName)
+    HB:Msg(L["%s error \226\128\148 see /hb debug"], moduleName)
   end
   return nil
 end
@@ -83,7 +85,7 @@ end
 function HB:SetWaypoint(mapID, x, y)
   if not (mapID and x and y and C_Map and C_Map.SetUserWaypoint and UiMapPoint) then return false end
   if C_Map.CanSetUserWaypointOnMap and not C_Map.CanSetUserWaypointOnMap(mapID) then
-    self:Msg("Can't place a waypoint on this map.")
+    self:Msg(L["Can't place a waypoint on this map."])
     return false
   end
   C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(mapID, x, y))
@@ -194,7 +196,7 @@ end
 function HB:SetModuleEnabled(name, enabled)
   local mod = self:GetModule(name, true)
   if not mod then
-    self:Msg("Unknown module: %s", tostring(name))
+    self:Msg(L["Unknown module: %s"], tostring(name))
     return false
   end
   local mods = self.db.profile.modules
@@ -206,7 +208,7 @@ function HB:SetModuleEnabled(name, enabled)
       if not isOn(dep) then missing[#missing + 1] = label(dep) end
     end
     if #missing > 0 then
-      self:Msg("%s requires %s \226\128\148 enable it first.", label(name), table.concat(missing, ", "))
+      self:Msg(L["%s requires %s \226\128\148 enable it first."], label(name), table.concat(missing, ", "))
       return false
     end
     mods[name].enabled = true
@@ -249,7 +251,7 @@ function HB:OnInitialize()
   local ok, err = pcall(ns.Migrate.Run, self.db.global, self.migrations)
   if not ok then
     self.errors.Migrate = tostring(err)
-    self:Msg("saved data migration failed \226\128\148 %s", tostring(err))
+    self:Msg(L["saved data migration failed \226\128\148 %s"], tostring(err))
   end
 
   self.db.RegisterCallback(self, "OnProfileChanged", "ApplyModuleStates")
@@ -268,19 +270,19 @@ end
 -- Slash commands --------------------------------------------------------------
 
 local HELP = {
-  "/hb \226\128\148 toggle the Harvestbook window",
-  "/hb start | pause | resume | stop | reset \226\128\148 control the gathering session",
-  "/hb companion \226\128\148 toggle the companion window",
-  "/hb config \226\128\148 open all options",
-  "/hb prices \226\128\148 refresh prices for the current session",
-  "/hb shopping \226\128\148 open the shopping list",
-  "/hb export \226\128\148 copy your data as CSV for a spreadsheet",
-  "/hb debug \226\128\148 toggle debug output",
-  "/hb help \226\128\148 show this list",
+  L["/hb \226\128\148 toggle the Harvestbook window"],
+  L["/hb start | pause | resume | stop | reset \226\128\148 control the gathering session"],
+  L["/hb companion \226\128\148 toggle the companion window"],
+  L["/hb config \226\128\148 open all options"],
+  L["/hb prices \226\128\148 refresh prices for the current session"],
+  L["/hb shopping \226\128\148 open the shopping list"],
+  L["/hb export \226\128\148 copy your data as CSV for a spreadsheet"],
+  L["/hb debug \226\128\148 toggle debug output"],
+  L["/hb help \226\128\148 show this list"],
 }
 
 function HB:PrintHelp()
-  self:Msg("commands (/harvestbook works too):")
+  self:Msg(L["commands (/harvestbook works too):"])
   for _, line in ipairs(HELP) do
     DEFAULT_CHAT_FRAME:AddMessage("  " .. line)
   end
@@ -290,14 +292,14 @@ local function toggleUI()
   if HB.UI and HB.UI.Toggle then
     HB.UI:Toggle()
   else
-    HB:Msg("window not available.")
+    HB:Msg(L["window not available."])
   end
 end
 
 local function sessionModule()
   local mod = HB:GetModule("Session", true)
   if mod and mod:IsEnabled() then return mod end
-  HB:Msg("the Session module is disabled.")
+  HB:Msg(L["the Session module is disabled."])
   return nil
 end
 
@@ -316,7 +318,7 @@ function HB:OnSlash(input)
     if self.UI and self.UI.ToggleCompanion then
       self.UI:ToggleCompanion()
     else
-      self:Msg("companion not available.")
+      self:Msg(L["companion not available."])
     end
   elseif cmd == "config" then
     local registry = LibStub("AceConfigRegistry-3.0", true)
@@ -324,7 +326,7 @@ function HB:OnSlash(input)
     if registry and dialog and registry:GetOptionsTable("Harvestbook") then
       dialog:Open("Harvestbook")
     else
-      self:Msg("options not available.")
+      self:Msg(L["options not available."])
     end
   elseif cmd == "prices" then
     self:RefreshSessionPrices()
@@ -333,14 +335,14 @@ function HB:OnSlash(input)
     if mod and mod:IsEnabled() and self.UI then
       self.UI:ShowPage("shopping")
     else
-      self:Msg("the Shopping module is disabled.")
+      self:Msg(L["the Shopping module is disabled."])
     end
   elseif cmd == "export" then
     local mod = self:GetModule("Records", true)
     if mod and mod:IsEnabled() then
       self:SafeCall("Records", mod.OpenExport, mod)
     else
-      self:Msg("the Records module is disabled.")
+      self:Msg(L["the Records module is disabled."])
     end
   elseif cmd == "debug" then
     local p = self.db.profile
@@ -358,13 +360,13 @@ end
 
 function HB:RefreshSessionPrices()
   if not (self.Pricing and self.Pricing.Refresh) then
-    self:Msg("pricing not available.")
+    self:Msg(L["pricing not available."])
     return
   end
   local mod = self:GetModule("Session", true)
   local session = mod and mod:IsEnabled() and mod.GetCurrent and mod:GetCurrent()
   if not session or not session.items then
-    self:Msg("no active session \226\128\148 nothing to refresh.")
+    self:Msg(L["no active session \226\128\148 nothing to refresh."])
     return
   end
   local list = {}
@@ -372,7 +374,7 @@ function HB:RefreshSessionPrices()
     list[#list + 1] = { itemID = it.itemID, quality = it.quality, link = it.link }
   end
   self:SafeCall("Pricing", self.Pricing.Refresh, self.Pricing, list)
-  self:Msg("refreshed prices for %d items.", #list)
+  self:Msg(L["refreshed prices for %d items."], #list)
 end
 
 function Harvestbook_OnAddonCompartmentClick()

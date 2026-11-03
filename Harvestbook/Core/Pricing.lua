@@ -1,4 +1,5 @@
 local ADDON, ns = ...
+local L = ns.L
 
 -- Price resolution + cache (spec §6). Values are integer copper.
 -- Cache: global.prices[itemKey] = { value = copper, source = name, time = unix }.
@@ -61,11 +62,11 @@ local SOURCES = {
 }
 
 Pricing.SOURCE_LABELS = {
-  override = "Manual override",
+  override = L["Manual override"],
   auctionator = "Auctionator",
   tsm = "TradeSkillMaster",
-  vendor = "Vendor price",
-  none = "No price",
+  vendor = L["Vendor price"],
+  none = L["No price"],
 }
 
 -- Ordered source list for PriceChain, from profile.pricing.order, skipping

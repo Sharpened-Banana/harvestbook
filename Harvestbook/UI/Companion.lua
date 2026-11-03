@@ -1,4 +1,5 @@
 local ADDON, ns = ...
+local L = ns.L
 
 -- The companion (spec §5.3): small translucent session window with a gold
 -- title, right-aligned state text and an underlined tab strip. Modules add
@@ -282,9 +283,9 @@ end
 function UI:SetCompanionShown(on, quiet)
   db().shown = on and true or false
   if on and not quiet and db().hideNoSession and not sessionActive then
-    HB:Msg("the companion is hidden while no session is active (see the Window page).")
+    HB:Msg(L["the companion is hidden while no session is active (see the Window page)."])
   elseif on and not quiet and next(tabs) == nil then
-    HB:Msg("the companion has no tabs while the Session module is disabled.")
+    HB:Msg(L["the companion has no tabs while the Session module is disabled."])
   end
   updateVisibility()
   self:RefreshPage("window")

@@ -1,4 +1,5 @@
 local ADDON, ns = ...
+local L = ns.L
 
 -- Item names for every page. A name the client has not loaded yet is requested
 -- once; when it arrives all pages and the companion redraw.
@@ -32,7 +33,7 @@ function HB:ItemName(itemID, link)
     requested[itemID] = true
     pcall(C_Item.RequestLoadItemDataByID, itemID)
   end
-  return nameFromLink(link) or ("Item " .. tostring(itemID))
+  return nameFromLink(link) or L["Item %s"]:format(tostring(itemID))
 end
 
 -- Quality badges come from the game (12.1+ GetItemReagentQualityInfo), so

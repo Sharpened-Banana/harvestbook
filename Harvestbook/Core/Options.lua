@@ -1,4 +1,5 @@
 local ADDON, ns = ...
+local L = ns.L
 
 -- AceConfig root (spec §5.4). Registered at file load so modules can call
 -- HB:AddOptions any time; every get/set reads HB.db lazily. HB:InitOptions
@@ -49,16 +50,16 @@ end
 local function dependsText(name)
   local deps = HB.DEPENDS[name]
   if not deps or #deps == 0 then
-    return "Turns the " .. HB.MODULE_LABELS[name] .. " module on or off. Disabling never deletes its data."
+    return L["Turns the %s module on or off. Disabling never deletes its data."]:format(HB.MODULE_LABELS[name])
   end
   local labels = {}
   for i, dep in ipairs(deps) do labels[i] = HB.MODULE_LABELS[dep] or dep end
-  return "Requires " .. table.concat(labels, " and ")
+  return L["Requires %s"]:format(table.concat(labels, ", "))
 end
 
 local function moduleToggles()
   local args = {
-    header = { type = "header", name = "Modules", order = 0 },
+    header = { type = "header", name = L["Modules"], order = 0 },
   }
   for i, name in ipairs(HB.MODULE_ORDER) do
     args[name] = {
@@ -90,10 +91,10 @@ end
 
 local SOURCE_NAMES = { "override", "auctionator", "tsm", "vendor" }
 local SOURCE_VALUES = {
-  override = "Manual override",
+  override = L["Manual override"],
   auctionator = "Auctionator",
   tsm = "TradeSkillMaster",
-  vendor = "Vendor price",
+  vendor = L["Vendor price"],
 }
 
 -- Puts value into slot, moving the slot's old value to wherever value was,
@@ -119,13 +120,13 @@ local function detectedSources()
   local found = {}
   if Auctionator and Auctionator.API and Auctionator.API.v1 then found[#found + 1] = "Auctionator" end
   if TSM_API then found[#found + 1] = "TradeSkillMaster" end
-  if #found == 0 then return "No auction addon detected \226\128\148 vendor prices and overrides only." end
-  return "Detected: " .. table.concat(found, ", ") .. ". Missing sources are skipped."
+  if #found == 0 then return L["No auction addon detected \226\128\148 vendor prices and overrides only."] end
+  return L["Detected: %s. Missing sources are skipped."]:format(table.concat(found, ", "))
 end
 
 local function pricingArgs()
   local args = {
-    header = { type = "header", name = "Price sources", order = 0 },
+    header = { type = "header", name = L["Price sources"], order = 0 },
     detected = { type = "description", order = 1, name = detectedSources, fontSize = "medium" },
   }
   for slot = 1, #SOURCE_NAMES do
@@ -133,8 +134,8 @@ local function pricingArgs()
       type = "select",
       order = 1 + slot,
       width = "normal",
-      name = "Source " .. slot,
-      desc = "Sources are tried in this order; the first with a price wins. Choosing a source swaps it with this slot.",
+      name = L["Source %d"]:format(slot),
+      desc = L["Sources are tried in this order; the first with a price wins. Choosing a source swaps it with this slot."],
       values = SOURCE_VALUES,
       sorting = SOURCE_NAMES,
       get = function() return HB.db.profile.pricing.order[slot] end,
@@ -148,8 +149,8 @@ local function pricingArgs()
     type = "input",
     order = 10,
     width = "double",
-    name = "TSM price string",
-    desc = "TradeSkillMaster custom price used for the TSM source (default DBMarket).",
+    name = L["TSM price string"],
+    desc = L["TradeSkillMaster custom price used for the TSM source (default DBMarket)."],
     get = function() return HB.db.profile.pricing.tsmString end,
     set = function(_, value)
       value = strtrim(value or "")
@@ -161,8 +162,8 @@ local function pricingArgs()
     type = "toggle",
     order = 11,
     width = "full",
-    name = "Subtract the auction house cut (5%)",
-    desc = "Auctionator and TSM prices are listing prices. On: they count 95% of that, what a sale actually pays. Vendor prices and manual overrides are not changed.",
+    name = L["Subtract the auction house cut (5%)"],
+    desc = L["Auctionator and TSM prices are listing prices. On: they count 95% of that, what a sale actually pays. Vendor prices and manual overrides are not changed."],
     get = function() return HB.db.profile.pricing.ahCut end,
     set = function(_, value)
       HB.db.profile.pricing.ahCut = value and true or false
@@ -192,7 +193,7 @@ end
 local function minimapToggle(order)
   return {
     type = "toggle", order = order, width = "full",
-    name = "Show minimap button",
+    name = L["Show minimap button"],
     get = function() return not HB.db.profile.minimap.hide end,
     set = function(_, value)
       HB.db.profile.minimap.hide = not value
@@ -212,14 +213,14 @@ end
 
 -- Returns a profile table, or nil + reason.
 local function decodeImport(text)
-  if type(text) ~= "string" then return nil, "empty string" end
+  if type(text) ~= "string" then return nil, L["empty string"] end
   text = text:gsub("%s+", "")
-  if text == "" then return nil, "empty string" end
-  if text:sub(1, #EXPORT_PREFIX) ~= EXPORT_PREFIX then return nil, "not a Harvestbook settings string" end
+  if text == "" then return nil, L["empty string"] end
+  if text:sub(1, #EXPORT_PREFIX) ~= EXPORT_PREFIX then return nil, L["not a Harvestbook settings string"] end
   local raw = Base64.Decode(text:sub(#EXPORT_PREFIX + 1))
-  if not raw then return nil, "damaged string (bad encoding)" end
+  if not raw then return nil, L["damaged string (bad encoding)"] end
   local ok, data = AceSerializer:Deserialize(raw)
-  if not ok or type(data) ~= "table" then return nil, "damaged string (cannot read settings)" end
+  if not ok or type(data) ~= "table" then return nil, L["damaged string (cannot read settings)"] end
   return data
 end
 
@@ -251,11 +252,11 @@ local function applyImport(data)
   HB:ApplyModuleStates()
   if HB.Pricing and HB.Pricing.ClearCache then HB.Pricing:ClearCache() end
   notify()
-  HB:Msg("settings imported. Some changes apply after /reload.")
+  HB:Msg(L["settings imported. Some changes apply after /reload."])
 end
 
 StaticPopupDialogs["HARVESTBOOK_IMPORT"] = {
-  text = "Overwrite the current Harvestbook profile with the imported settings?",
+  text = L["Overwrite the current Harvestbook profile with the imported settings?"],
   button1 = ACCEPT, button2 = CANCEL,
   OnAccept = function(_, data) HB:SafeCall("Options", applyImport, data) end,
   timeout = 0, whileDead = true, hideOnEscape = true, preferredIndex = 3,
@@ -279,7 +280,7 @@ local function resetAllData()
 end
 
 StaticPopupDialogs["HARVESTBOOK_RESET_1"] = {
-  text = "Reset ALL Harvestbook data? Node log, sessions, records, goals, prices and settings will be erased.",
+  text = L["Reset ALL Harvestbook data? Node log, sessions, records, goals, prices and settings will be erased."],
   button1 = YES, button2 = CANCEL,
   OnAccept = function()
     -- Defer so the second popup is not hidden by this one closing.
@@ -289,8 +290,8 @@ StaticPopupDialogs["HARVESTBOOK_RESET_1"] = {
 }
 
 StaticPopupDialogs["HARVESTBOOK_RESET_2"] = {
-  text = "Are you absolutely sure? This cannot be undone.",
-  button1 = "Erase everything", button2 = CANCEL,
+  text = L["Are you absolutely sure? This cannot be undone."],
+  button1 = L["Erase everything"], button2 = CANCEL,
   OnAccept = function()
     C_Timer.After(0, function() HB:SafeCall("Options", resetAllData) end)
   end,
@@ -298,41 +299,41 @@ StaticPopupDialogs["HARVESTBOOK_RESET_2"] = {
 }
 
 StaticPopupDialogs["HARVESTBOOK_RELOAD"] = {
-  text = "Harvestbook data has been reset. Reload the UI now to finish?",
-  button1 = RELOADUI or "Reload UI", button2 = LATER or CANCEL,
+  text = L["Harvestbook data has been reset. Reload the UI now to finish?"],
+  button1 = RELOADUI or L["Reload UI"], button2 = LATER or CANCEL,
   OnAccept = function() ReloadUI() end,
   timeout = 0, whileDead = true, hideOnEscape = true, preferredIndex = 3,
 }
 
 local function dataArgs()
   return {
-    shareHeader = { type = "header", name = "Share settings", order = 0 },
+    shareHeader = { type = "header", name = L["Share settings"], order = 0 },
     export = {
       type = "input", order = 1, width = "full", multiline = 4,
-      name = "Export",
-      desc = "Copy this string (Ctrl+A, Ctrl+C) to share or back up the current profile's settings.",
+      name = L["Export"],
+      desc = L["Copy this string (Ctrl+A, Ctrl+C) to share or back up the current profile's settings."],
       get = function() return exportString() end,
       set = function() end,
     },
     import = {
       type = "input", order = 2, width = "full", multiline = 4,
-      name = "Import",
-      desc = "Paste a Harvestbook settings string and press Accept.",
+      name = L["Import"],
+      desc = L["Paste a Harvestbook settings string and press Accept."],
       get = function() return "" end,
       set = function(_, value)
         local data, reason = decodeImport(value)
         if not data then
-          HB:Msg("import failed: %s.", reason)
+          HB:Msg(L["import failed: %s."], reason)
           return
         end
         StaticPopup_Show("HARVESTBOOK_IMPORT", nil, nil, data)
       end,
     },
-    resetHeader = { type = "header", name = "Danger zone", order = 10 },
+    resetHeader = { type = "header", name = L["Danger zone"], order = 10 },
     reset = {
       type = "execute", order = 11,
-      name = "Reset all data",
-      desc = "Erases every node, session, record, goal, price and setting. Asks twice.",
+      name = L["Reset all data"],
+      desc = L["Erases every node, session, record, goal, price and setting. Asks twice."],
       func = function() StaticPopup_Show("HARVESTBOOK_RESET_1") end,
     },
   }
@@ -346,38 +347,38 @@ HB.options = {
   childGroups = "tab",
   args = {
     general = {
-      type = "group", order = 1, name = "General",
+      type = "group", order = 1, name = L["General"],
       args = {
-        modules = { type = "group", inline = true, order = 1, name = "Modules", args = moduleToggles() },
-        pricing = { type = "group", inline = true, order = 2, name = "Pricing", args = pricingArgs() },
+        modules = { type = "group", inline = true, order = 1, name = L["Modules"], args = moduleToggles() },
+        pricing = { type = "group", inline = true, order = 2, name = L["Pricing"], args = pricingArgs() },
         session = {
-          type = "group", inline = true, order = 3, name = "Session",
+          type = "group", inline = true, order = 3, name = L["Session"],
           args = {
-            autoStart = sessionToggle(1, "Start a session on the first gather", nil, "autoStart"),
-            idleStop = sessionToggle(1.1, "End the session when I stop gathering",
-              "Ends the session after the minutes below without a gather. Its time ends at the last gather, so idle minutes don't lower gold/hr.", "idleStop"),
+            autoStart = sessionToggle(1, L["Start a session on the first gather"], nil, "autoStart"),
+            idleStop = sessionToggle(1.1, L["End the session when I stop gathering"],
+              L["Ends the session after the minutes below without a gather. Its time ends at the last gather, so idle minutes don't lower gold/hr."], "idleStop"),
             idleMinutes = {
-              type = "range", order = 1.2, name = "Minutes without a gather", min = 1, max = 60, step = 1,
+              type = "range", order = 1.2, name = L["Minutes without a gather"], min = 1, max = 60, step = 1,
               disabled = function() return not HB.db.profile.session.idleStop end,
               get = function() return HB.db.profile.session.idleMinutes or 5 end,
               set = function(_, v) HB.db.profile.session.idleMinutes = v end,
             },
-            keepOnLogout = sessionToggle(1.3, "Keep the session across logouts",
-              "Off: a session still open when you log out is saved to history at your next login, unless you are back within 15 minutes (a disconnect or a quick relog). /reload never ends a session.", "keepOnLogout"),
-            instance = sessionToggle(2, "Pause in instances", nil, "pause", "instance"),
-            mail = sessionToggle(3, "Pause at the mailbox", nil, "pause", "mail"),
-            ah = sessionToggle(4, "Pause at the auction house", nil, "pause", "ah"),
-            afk = sessionToggle(5, "Pause while AFK", nil, "pause", "afk"),
-            autoResume = sessionToggle(6, "Resume automatically", "Resume the session when the pause reason ends.", "autoResume"),
+            keepOnLogout = sessionToggle(1.3, L["Keep the session across logouts"],
+              L["Off: a session still open when you log out is saved to history at your next login, unless you are back within 15 minutes (a disconnect or a quick relog). /reload never ends a session."], "keepOnLogout"),
+            instance = sessionToggle(2, L["Pause in instances"], nil, "pause", "instance"),
+            mail = sessionToggle(3, L["Pause at the mailbox"], nil, "pause", "mail"),
+            ah = sessionToggle(4, L["Pause at the auction house"], nil, "pause", "ah"),
+            afk = sessionToggle(5, L["Pause while AFK"], nil, "pause", "afk"),
+            autoResume = sessionToggle(6, L["Resume automatically"], L["Resume the session when the pause reason ends."], "autoResume"),
           },
         },
         minimap = {
-          type = "group", inline = true, order = 4, name = "Minimap",
+          type = "group", inline = true, order = 4, name = L["Minimap"],
           args = { show = minimapToggle(1) },
         },
       },
     },
-    data = { type = "group", order = 90, name = "Data", args = dataArgs() },
+    data = { type = "group", order = 90, name = L["Data"], args = dataArgs() },
   },
 }
 
