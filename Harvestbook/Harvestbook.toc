@@ -26,6 +26,7 @@ Logic\Base64.lua
 Logic\GoldLedger.lua
 Logic\RouteBuilder.lua
 Logic\GearCompare.lua
+Logic\PriceTrend.lua
 
 Core\Init.lua
 Core\Items.lua
@@ -46,5 +47,6 @@ Modules\Records.lua
 Modules\BestSpot.lua
 Modules\Routes.lua
 Modules\GearCompare.lua
+Modules\Trends.lua
 Modules\Goals.lua
 Modules\Alarms.lua

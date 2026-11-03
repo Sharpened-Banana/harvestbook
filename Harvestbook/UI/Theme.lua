@@ -36,6 +36,7 @@ Theme.COLORS = {
   sidebarText = hex("3B2A14"),
   redBorder = hex("B8912E"),
   redHover = hex("9A1A1A"),
+  redText = hex("FF5A4D"), -- `red` is a button fill, too dark to read as text
   barBg = hex("000000", 0.55),
   white = hex("FFFFFF"),
 }
@@ -50,6 +51,7 @@ Theme.ICONS = {
   records = "Interface\\Icons\\INV_Misc_Trophy_03",
   gold = "Interface\\Icons\\INV_Misc_Coin_02",
   gear = "Interface\\Icons\\INV_Misc_Gear_01",
+  trends = "Interface\\Icons\\INV_Misc_Coin_17",
   goals = "Interface\\Icons\\INV_Misc_Note_01",
   alarms = "Interface\\Icons\\INV_Misc_Bell_01",
   window = "Interface\\Icons\\INV_Misc_Spyglass_03",

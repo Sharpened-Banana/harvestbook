@@ -35,6 +35,40 @@ function HB:ItemName(itemID, link)
   return nameFromLink(link) or ("Item " .. tostring(itemID))
 end
 
+-- Quality badges come from the game (12.1+ GetItemReagentQualityInfo), so
+-- Midnight's Silver / Gold tiers show their own icons. Cached per item key;
+-- older clients fall back to the Dragonflight tier atlas.
+local qualityIcons = {} -- [itemKey] = { small = atlas|false, chat = atlas|false }
+
+-- row = { itemID, quality, link }.
+function HB:ItemQualityInfo(row)
+  local key = ns.SessionMath.ItemKey(row.itemID, row.quality)
+  local c = qualityIcons[key]
+  if c then return c end
+  c = { small = false, chat = false }
+  local api = C_TradeSkillUI
+  if api and api.GetItemReagentQualityInfo then
+    local ok, info = pcall(api.GetItemReagentQualityInfo, row.link or row.itemID)
+    if ok and type(info) == "table" then
+      c.small = type(info.iconSmall) == "string" and info.iconSmall or false
+      c.chat = type(info.iconChat) == "string" and info.iconChat or c.small
+    end
+  elseif type(row.quality) == "number" then
+    c.small = "Professions-Icon-Quality-Tier" .. row.quality .. "-Small"
+    c.chat = c.small
+  end
+  -- A tiered item whose info isn't loaded yet is asked again next refresh.
+  if c.small or type(row.quality) ~= "number" then qualityIcons[key] = c end
+  return c
+end
+
+-- Inline quality badge for font strings ("" for items without a quality).
+function HB:ItemQualityMarkup(row, size)
+  local atlas = self:ItemQualityInfo(row).chat
+  if not atlas then return "" end
+  return string.format(" |A:%s:%d:%d|a", atlas, size, size)
+end
+
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
 frame:SetScript("OnEvent", function(_, _, itemID)

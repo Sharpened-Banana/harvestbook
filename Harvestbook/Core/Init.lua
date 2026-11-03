@@ -10,7 +10,7 @@ Harvestbook = HB
 local PREFIX = "|cffffd100Harvestbook|r: "
 
 -- Dependencies first, dependents after (used for enable/disable ordering).
-HB.MODULE_ORDER = { "Session", "NodeLog", "Records", "MapPins", "BestSpot", "Routes", "GearCompare", "Goals", "Alarms" }
+HB.MODULE_ORDER = { "Session", "NodeLog", "Records", "MapPins", "BestSpot", "Routes", "GearCompare", "Trends", "Goals", "Alarms" }
 
 HB.DEPENDS = {
   MapPins = { "NodeLog" },
@@ -24,7 +24,7 @@ HB.DEPENDS = {
 
 HB.MODULE_LABELS = {
   Session = "Session", NodeLog = "Node Log", Records = "Records", MapPins = "Map Pins",
-  BestSpot = "Best Spot", Routes = "Routes", GearCompare = "Gear Comparison", Goals = "Goals", Alarms = "Alarms",
+  BestSpot = "Best Spot", Routes = "Routes", GearCompare = "Gear Comparison", Trends = "Trends", Goals = "Goals", Alarms = "Alarms",
 }
 
 local function label(name)

@@ -140,6 +140,26 @@ Every "Verify:" item below, by section (the original entries stay in their secti
 - [ ] Turning the module off removes the page and new sessions get no `gear`; on again, old sets are still there. Session off also turns it off
 - [ ] Page readable at 700x500: columns not clipped, note fits on two lines, list starts below it
 
+## Trends
+- [ ] Trends appears in the sidebar after Gear and in the Settings module toggles; the sidebar still fits at 700x500
+- [ ] With no history, the chart area says no prices are recorded yet, the list is empty and the grey note shows
+- [ ] With Auctionator or TSM: gather a node, then `/dump Harvestbook.db.global.priceHistory` shows `itemID:quality` with today's date and the price; bonus loot is recorded too
+- [ ] Recorded price equals `/dump Harvestbook.db.global.prices["itemID:quality"].value`, with the auction house cut on and off
+- [ ] An item priced only by a vendor or by a manual override gets no history entry
+- [ ] With no price addon, or while it has not initialised (`prices` has no entry for the item), nothing is recorded and nothing errors
+- [ ] Gather the same item twice on a day with a changed price (`/hb prices` between): one entry, the last price
+- [ ] A cached price from an earlier day (edit `prices[...].time`) is recorded under that day, not today
+- [ ] One day of data: the chart says it needs two days and shows no line or labels, the row shows grey dashes for both changes
+- [ ] Edit saved variables to give an item 40 days: line drawn left to right, oldest date lower left, newest lower right, highest and lowest price labels correct, gaps wide where days are missing, dots on each recorded day
+- [ ] A flat history draws a level line mid-height with equal min and max labels
+- [ ] Changes: rises green with "+", falls red with "-", no data a grey dash; click each header: sorts, click again reverses, dashes stay last
+- [ ] Default selection is the item with the most history; click a row: its name turns gold and the chart switches
+- [ ] Item column shows the icon and quality badge; a not-yet-loaded name fills in on its own
+- [ ] Resize the window with a chart showing: the line redraws to fit, no stray segments
+- [ ] Turning the module off removes the page and gathers add nothing; on again, the history is still there
+- [ ] Reset all data empties the page, even when choosing "Later" on the reload prompt, and `priceHistory` is `{}`
+- [ ] Page readable at 700x500: columns not clipped, note fits on two lines, list has several rows, money labels not overlapping the plot
+
 ## Alarms (Task 18)
 - [ ] Test button plays each sound and shows text
 - [ ] Value alarm fires on a high-value node; no repeat within 2 s
