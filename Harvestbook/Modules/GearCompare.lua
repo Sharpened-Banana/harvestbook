@@ -1,4 +1,5 @@
 local ADDON, ns = ...
+local L = ns.L
 
 -- Gear comparison module: snapshots the equipped profession gear onto a
 -- session when it starts (s.gear, see Logic/GearCompare.BuildGear) and compares
@@ -30,7 +31,7 @@ local SLOTS = {
 
 local function mapName(mapID)
   local info = C_Map and C_Map.GetMapInfo and C_Map.GetMapInfo(mapID)
-  return info and info.name or ("Map " .. tostring(mapID))
+  return info and info.name or L["Map %s"]:format(tostring(mapID))
 end
 
 local function sessions() return HB.db.global.sessions end
@@ -63,16 +64,17 @@ end
 
 -- Columns + 4 px pad + 16 px scrollbar must be <= 440: 420.
 local COLUMNS = {
-  { key = "set", title = "Gear set", width = 125, align = "LEFT" },
-  { key = "sessions", title = "Sessions", width = 50, align = "RIGHT" },
-  { key = "time", title = "Time", width = 50, align = "RIGHT" },
-  { key = "gph", title = "Gold/hr", width = 75, align = "RIGHT" },
-  { key = "nph", title = "Nodes/hr", width = 60, align = "RIGHT" },
-  { key = "pct", title = "vs best", width = 60, align = "RIGHT" },
+  { key = "set", title = L["Gear set"], width = 125, align = "LEFT" },
+  { key = "sessions", title = L["Sessions"], width = 50, align = "RIGHT" },
+  { key = "time", title = L["Time"], width = 50, align = "RIGHT" },
+  { key = "gph", title = L["Gold/hr"], width = 75, align = "RIGHT" },
+  { key = "nph", title = L["Nodes/hr"], width = 60, align = "RIGHT" },
+  { key = "pct", title = L["vs best"], width = 60, align = "RIGHT" },
 }
 
 local function cell(row, key)
   if key == "set" then
+    if #row.items == 0 then return L["No profession gear"] end
     return Compare.Label(row.items, itemName)
   elseif key == "sessions" then
     return Format.Thousands(row.sessions)
@@ -83,7 +85,7 @@ local function cell(row, key)
   elseif key == "nph" then
     return string.format("%.1f", row.nodesPerHour)
   elseif key == "pct" then
-    if row.pct == 0 then return "Best" end
+    if row.pct == 0 then return L["Best"] end
     return string.format("%.1f%%", row.pct)
   end
 end
@@ -95,7 +97,7 @@ local function zoneOptions()
     if na ~= nb then return na < nb end
     return a < b
   end)
-  local options = { { value = ALL_ZONES, text = "All zones" } }
+  local options = { { value = ALL_ZONES, text = L["All zones"] } }
   for _, mapID in ipairs(ids) do
     options[#options + 1] = { value = mapID, text = mapName(mapID) }
   end
@@ -104,9 +106,9 @@ end
 
 local function showTooltip(row, rowFrame)
   GameTooltip:SetOwner(rowFrame, "ANCHOR_RIGHT")
-  GameTooltip:AddLine("Gear set", Theme:Color("gold"))
+  GameTooltip:AddLine(L["Gear set"], Theme:Color("gold"))
   if #row.items == 0 then
-    GameTooltip:AddLine("No profession gear", 1, 1, 1)
+    GameTooltip:AddLine(L["No profession gear"], 1, 1, 1)
   end
   for _, it in ipairs(row.items) do
     GameTooltip:AddLine(itemName(it.itemID, it.link), 1, 1, 1)
@@ -133,8 +135,8 @@ local function refreshPage(body)
   ui.list:SetRows(result.sets, cell)
   ui.empty:SetShown(#result.sets == 0)
   if result.noGear > 0 then
-    ui.noGear:SetText(result.noGear == 1 and "1 session: no gear data"
-      or (Format.Thousands(result.noGear) .. " sessions: no gear data"))
+    ui.noGear:SetText(result.noGear == 1 and L["1 session: no gear data"]
+      or L["%s sessions: no gear data"]:format(Format.Thousands(result.noGear)))
   else
     ui.noGear:SetText("")
   end
@@ -164,7 +166,7 @@ local function buildPage(body)
   ui.note:SetJustifyH("LEFT")
   ui.note:SetJustifyV("TOP")
   ui.note:SetTextColor(Theme:Color("grey"))
-  ui.note:SetText("Different zones and prices affect these numbers, so compare within one zone and over several sessions.")
+  ui.note:SetText(L["Different zones and prices affect these numbers, so compare within one zone and over several sessions."])
 
   ui.list = W.ColumnList(body, COLUMNS)
   ui.list:SetPoint("TOPLEFT", ui.note, "BOTTOMLEFT", 0, -4)
@@ -178,8 +180,7 @@ local function buildPage(body)
   ui.empty:SetPoint("RIGHT", body, "RIGHT", -4, 0)
   ui.empty:SetJustifyH("LEFT")
   ui.empty:SetTextColor(Theme:Color("grey"))
-  ui.empty:SetText("No gear sets to compare yet. Your profession gear is recorded when a session starts; "
-    .. "finish a session of at least a minute and its gear set appears here.")
+  ui.empty:SetText(L["No gear sets to compare yet. Your profession gear is recorded when a session starts; finish a session of at least a minute and its gear set appears here."])
   ui.empty:Hide()
 end
 
@@ -187,7 +188,7 @@ end
 -- Lifecycle
 ---------------------------------------------------------------------------
 
-local PAGE = { id = "gear", title = "Gear", order = 47, build = buildPage, refresh = refreshPage }
+local PAGE = { id = "gear", title = L["Gear"], order = 47, build = buildPage, refresh = refreshPage }
 
 local function onChanged() HB.UI:RefreshPage("gear") end
 

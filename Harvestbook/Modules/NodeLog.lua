@@ -1,4 +1,5 @@
 local ADDON, ns = ...
+local L = ns.L
 
 -- NodeLog module (spec §4.2): records what every gathered node gave you,
 -- per zone and spot (HB.db.global.nodes[mapID][spotKey], see Logic/NodeGrid),
@@ -40,12 +41,12 @@ local function names() return HB.db.global.nodeNames end
 local function money(copper) return Format.Money(copper, HB.db.profile.goldStyle) end
 
 local function nodeName(id)
-  return names()[id] or ("Node " .. tostring(id))
+  return names()[id] or L["Node %s"]:format(tostring(id))
 end
 
 local function mapName(mapID)
   local info = C_Map and C_Map.GetMapInfo and C_Map.GetMapInfo(mapID)
-  return info and info.name or ("Map " .. tostring(mapID))
+  return info and info.name or L["Map %s"]:format(tostring(mapID))
 end
 
 local function itemName(itemID) return HB:ItemName(itemID) end
@@ -149,7 +150,7 @@ end
 function NodeLog:ImportGatherMate()
   local gm = _G.GatherMate2
   if not gm or not gm2Loaded() or not gm.GetNodesForZone or not gm.DecodeLoc then
-    HB:Msg("GatherMate2 is not loaded.")
+    HB:Msg(L["GatherMate2 is not loaded."])
     return 0
   end
   local added = 0
@@ -170,7 +171,7 @@ function NodeLog:ImportGatherMate()
       end
     end
   end
-  HB:Msg("Imported %d GatherMate2 nodes.", added)
+  HB:Msg(L["Imported %d GatherMate2 nodes."], added)
   HB:SendMessage("HB_NODELOG_CHANGED", nil, nil)
   return added
 end
@@ -180,17 +181,17 @@ end
 ---------------------------------------------------------------------------
 
 local NODE_COLUMNS = {
-  { key = "name", title = "Node", width = 140, align = "LEFT" },
-  { key = "count", title = "Count", width = 50, align = "RIGHT" },
-  { key = "share", title = "Share", width = 56, align = "RIGHT" },
-  { key = "avgItems", title = "Avg items", width = 70, align = "RIGHT" },
-  { key = "value", title = "Value/node", width = 100, align = "RIGHT" },
+  { key = "name", title = L["Node"], width = 140, align = "LEFT" },
+  { key = "count", title = L["Count"], width = 50, align = "RIGHT" },
+  { key = "share", title = L["Share"], width = 56, align = "RIGHT" },
+  { key = "avgItems", title = L["Avg items"], width = 70, align = "RIGHT" },
+  { key = "value", title = L["Value/node"], width = 100, align = "RIGHT" },
 }
 
 local ITEM_COLUMNS = {
-  { key = "name", title = "Item", width = 250, align = "LEFT" },
-  { key = "count", title = "Count", width = 70, align = "RIGHT" },
-  { key = "perNode", title = "Per node", width = 84, align = "RIGHT" },
+  { key = "name", title = L["Item"], width = 250, align = "LEFT" },
+  { key = "count", title = L["Count"], width = 70, align = "RIGHT" },
+  { key = "perNode", title = L["Per node"], width = 84, align = "RIGHT" },
 }
 
 local function nodeCell(row, key)
@@ -244,11 +245,11 @@ local function refreshPage(body)
   end
 
   if not index then
-    ui.pager:SetText("No zones recorded")
+    ui.pager:SetText(L["No zones recorded"])
     ui.pager:SetButtonsEnabled(false, false)
     ui.nodes:SetRows({}, nodeCell)
     ui.items:SetRows({}, itemCell)
-    ui.footer:SetText("Gather a node to start your log.")
+    ui.footer:SetText(L["Gather a node to start your log."])
     ui.footer:SetTextColor(Theme:Color("grey"))
     ui.forget:SetEnabled(false)
     return
@@ -272,10 +273,10 @@ local function refreshPage(body)
         itemID = it.itemID, count = it.count, perNode = it.count / selected.count,
       }
     end
-    ui.itemsTitle:SetText(nodeName(selected.nodeID) .. " " .. DASH .. " items")
+    ui.itemsTitle:SetText(L["%s \226\128\148 items"]:format(nodeName(selected.nodeID)))
   else
     selectedNode = nil
-    ui.itemsTitle:SetText("Click a node to see its items")
+    ui.itemsTitle:SetText(L["Click a node to see its items"])
   end
   ui.items:SetRows(itemRows, itemCell)
 
@@ -284,7 +285,7 @@ local function refreshPage(body)
     total = total + r.count
     copper = copper + r.valuePerNode * r.count
   end
-  ui.footer:SetText(string.format("This zone: %d nodes of %d kinds, worth %s", total, #rows, money(copper)))
+  ui.footer:SetText(L["This zone: %d nodes of %d kinds, worth %s"]:format(total, #rows, money(copper)))
   ui.footer:SetTextColor(1, 1, 1)
   ui.forget:SetEnabled(true)
 end
@@ -332,14 +333,14 @@ local function buildPage(body)
   ui.footer:SetJustifyH("LEFT")
   ui.footer:SetWordWrap(false)
 
-  ui.forget = W.RedButton(body, "Forget zone", function()
+  ui.forget = W.RedButton(body, L["Forget zone"], function()
     if curMap then StaticPopup_Show("HARVESTBOOK_FORGET_ZONE", mapName(curMap), nil, curMap) end
   end)
   ui.forget:SetPoint("BOTTOMLEFT", body, "BOTTOMLEFT", 0, 0)
 end
 
 StaticPopupDialogs["HARVESTBOOK_FORGET_ZONE"] = {
-  text = "Forget all recorded nodes in %s? This cannot be undone.",
+  text = L["Forget all recorded nodes in %s? This cannot be undone."],
   button1 = YES, button2 = CANCEL,
   OnAccept = function(_, mapID)
     HB:SafeCall("NodeLog", NodeLog.ForgetZone, NodeLog, mapID)
@@ -351,7 +352,7 @@ StaticPopupDialogs["HARVESTBOOK_FORGET_ZONE"] = {
 -- Lifecycle
 ---------------------------------------------------------------------------
 
-local PAGE = { id = "nodelog", title = "Node Log", order = 20, build = buildPage, refresh = refreshPage }
+local PAGE = { id = "nodelog", title = L["Node Log"], order = 20, build = buildPage, refresh = refreshPage }
 
 local function onChanged() HB.UI:RefreshPage("nodelog") end
 
@@ -371,13 +372,13 @@ end
 -- Options group (registered at load; reads state lazily).
 HB:AddOptions("nodelog", {
   type = "group",
-  name = "Node Log",
+  name = L["Node Log"],
   args = {
     importGM2 = {
       type = "execute",
       order = 10,
-      name = "Import GatherMate2 nodes",
-      desc = "Adds GatherMate2's herb and mining locations as pins with no yield data. Existing data is never overwritten.",
+      name = L["Import GatherMate2 nodes"],
+      desc = L["Adds GatherMate2's herb and mining locations as pins with no yield data. Existing data is never overwritten."],
       disabled = function() return not gm2Loaded() end,
       func = function() HB:SafeCall("NodeLog", NodeLog.ImportGatherMate, NodeLog) end,
     },
@@ -385,7 +386,7 @@ HB:AddOptions("nodelog", {
       type = "description",
       order = 11,
       name = function()
-        return gm2Loaded() and "" or "GatherMate2 is not loaded."
+        return gm2Loaded() and "" or L["GatherMate2 is not loaded."]
       end,
     },
   },

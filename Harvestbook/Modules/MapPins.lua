@@ -1,4 +1,5 @@
 local ADDON, ns = ...
+local L = ns.L
 
 -- MapPins module (spec 4.3): world map and minimap pins for every recorded
 -- spot, via HereBeDragons-Pins-2.0.
@@ -27,7 +28,7 @@ local MapPins = HB:NewModule("MapPins", "AceEvent-3.0")
 local HBDPins = LibStub("HereBeDragons-Pins-2.0", true)
 
 local DOT = "\194\183"
-local KIND_LABEL = { herb = "Herb", ore = "Ore", skin = "Skin" }
+local KIND_LABEL = { herb = L["Herb"], ore = L["Ore"], skin = L["Skin"] }
 local FADED_ALPHA = 0.4
 local MASK = "Interface\\CharacterFrame\\TempPortraitAlphaMask"
 
@@ -46,7 +47,7 @@ local function pinKey(mapID, spotKey) return mapID .. "|" .. spotKey end
 ---------------------------------------------------------------------------
 
 local function nodeName(id)
-  return HB.db.global.nodeNames[id] or ("Node " .. tostring(id))
+  return HB.db.global.nodeNames[id] or L["Node %s"]:format(tostring(id))
 end
 
 local function itemName(itemID) return HB:ItemName(itemID) end
@@ -76,17 +77,17 @@ local function showTooltip(pin)
 
   GameTooltip:SetOwner(pin, "ANCHOR_RIGHT")
   local dom = dominantNode(spot)
-  local title = dom and nodeName(dom) or KIND_LABEL[spot.kind] or "Node"
+  local title = dom and nodeName(dom) or KIND_LABEL[spot.kind] or L["Node"]
   GameTooltip:AddLine(title, Theme:Color("gold"))
 
   local gathers = spot.gathers or 0
   if spot.imported and gathers == 0 then
-    GameTooltip:AddLine("Imported from GatherMate2", 1, 1, 1)
+    GameTooltip:AddLine(L["Imported from GatherMate2"], 1, 1, 1)
   else
-    local line = string.format("%d gathers here", gathers)
+    local line = L["%d gathers here"]:format(gathers)
     local gph = zoneGph(pin.mapID) -- once per tooltip show
     if gph then
-      line = line .. " " .. DOT .. " " .. Format.Money(gph, HB.db.profile.goldStyle) .. " per hour"
+      line = line .. " " .. DOT .. " " .. L["%s per hour"]:format(Format.Money(gph, HB.db.profile.goldStyle))
     end
     GameTooltip:AddLine(line, 1, 1, 1)
 
@@ -100,7 +101,7 @@ local function showTooltip(pin)
       GameTooltip:AddLine(itemName(list[i].itemID) .. " x" .. list[i].n, Theme:Color("parchment"))
     end
   end
-  GameTooltip:AddLine("Shift-right-click to forget this spot", Theme:Color("grey"))
+  GameTooltip:AddLine(L["Shift-right-click to forget this spot"], Theme:Color("grey"))
   GameTooltip:Show()
 end
 
@@ -355,39 +356,39 @@ end
 
 HB:AddOptions("mappins", {
   type = "group",
-  name = "Map Pins",
+  name = L["Map Pins"],
   args = {
-    world = toggle(10, "Show on world map",
+    world = toggle(10, L["Show on world map"],
       function() return cfg().world end, function(v) cfg().world = v end),
-    minimap = toggle(11, "Show on minimap",
+    minimap = toggle(11, L["Show on minimap"],
       function() return cfg().minimap end, function(v) cfg().minimap = v end),
-    kindsHeader = { type = "header", order = 20, name = "Show these kinds" },
-    herb = kindToggle(21, "herb", "Herbs"),
-    ore = kindToggle(22, "ore", "Ore"),
-    skin = kindToggle(23, "skin", "Skinning"),
+    kindsHeader = { type = "header", order = 20, name = L["Show these kinds"] },
+    herb = kindToggle(21, "herb", L["Herbs"]),
+    ore = kindToggle(22, "ore", L["Ore"]),
+    skin = kindToggle(23, "skin", L["Skinning"]),
     minGathers = {
-      type = "range", order = 30, name = "Minimum gathers to show",
-      desc = "Spots gathered fewer times are hidden. Imported spots show when this is 1.",
+      type = "range", order = 30, name = L["Minimum gathers to show"],
+      desc = L["Spots gathered fewer times are hidden. Imported spots show when this is 1."],
       min = 1, max = 50, step = 1,
       get = function() return cfg().minGathers end,
       set = function(_, v) cfg().minGathers = v; rebuild() end,
     },
     fadeDays = {
-      type = "range", order = 31, name = "Fade pins not visited in (days)",
-      desc = "Older pins fade to 40% opacity.",
+      type = "range", order = 31, name = L["Fade pins not visited in (days)"],
+      desc = L["Older pins fade to 40% opacity."],
       min = 1, max = 90, step = 1,
       get = function() return cfg().fadeDays end,
       set = function(_, v) cfg().fadeDays = v; rebuild() end,
     },
     minimapAlpha = {
-      type = "range", order = 33, name = "Minimap pin opacity",
-      desc = "Lower values let the game's own minimap node icons show through Harvestbook's pins.",
+      type = "range", order = 33, name = L["Minimap pin opacity"],
+      desc = L["Lower values let the game's own minimap node icons show through Harvestbook's pins."],
       min = 0.1, max = 1, step = 0.05, isPercent = true,
       get = function() return cfg().minimapAlpha or 0.6 end,
       set = function(_, v) cfg().minimapAlpha = v; rebuild() end,
     },
     size = {
-      type = "range", order = 32, name = "Pin size",
+      type = "range", order = 32, name = L["Pin size"],
       min = 8, max = 32, step = 1,
       get = function() return cfg().size end,
       set = function(_, v) cfg().size = v; rebuild() end,

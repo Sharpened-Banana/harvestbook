@@ -1,4 +1,5 @@
 local ADDON, ns = ...
+local L = ns.L
 
 -- Price trends module: records the market price of what you gather, one per
 -- day (global.priceHistory, see Logic/PriceTrend), and charts it on a page.
@@ -72,10 +73,10 @@ end
 
 -- Columns + 4 px pad + 16 px scrollbar must be <= 440: 420.
 local COLUMNS = {
-  { key = "name", title = "Item", width = 200, align = "LEFT", sortable = true },
-  { key = "latest", title = "Latest", width = 80, align = "RIGHT", sortable = true },
-  { key = "pct7", title = "7 days", width = 70, align = "RIGHT", sortable = true },
-  { key = "pct30", title = "30 days", width = 70, align = "RIGHT", sortable = true },
+  { key = "name", title = L["Item"], width = 200, align = "LEFT", sortable = true },
+  { key = "latest", title = L["Latest"], width = 80, align = "RIGHT", sortable = true },
+  { key = "pct7", title = L["7 days"], width = 70, align = "RIGHT", sortable = true },
+  { key = "pct30", title = L["30 days"], width = 70, align = "RIGHT", sortable = true },
 }
 
 local LABEL_GUTTER = 76 -- left of the plot: min and max price labels
@@ -179,10 +180,9 @@ local function drawChart(ui)
   if drawn then
     ui.message:SetText("")
   elseif not row then
-    ui.message:SetText("No prices recorded yet. Gather a material that has an Auctionator or TSM price.")
+    ui.message:SetText(L["No prices recorded yet. Gather a material that has an Auctionator or TSM price."])
   else
-    ui.message:SetText("Not enough history for a chart yet: it needs prices from at least two days in the last "
-      .. Trend.WINDOW_DAYS .. ".")
+    ui.message:SetText(L["Not enough history for a chart yet: it needs prices from at least two days in the last %d."]:format(Trend.WINDOW_DAYS))
   end
 end
 
@@ -265,7 +265,7 @@ local function buildPage(body)
   ui.note:SetJustifyH("LEFT")
   ui.note:SetJustifyV("BOTTOM")
   ui.note:SetTextColor(Theme:Color("grey"))
-  ui.note:SetText("Prices come from Auctionator / TSM and are recorded when you gather that item, so gaps are normal.")
+  ui.note:SetText(L["Prices come from Auctionator / TSM and are recorded when you gather that item, so gaps are normal."])
 
   ui.list = W.ColumnList(body, COLUMNS)
   ui.list:SetPoint("TOPLEFT", body, "TOPLEFT", 0, -LIST_TOP)
@@ -295,7 +295,7 @@ end
 -- Lifecycle
 ---------------------------------------------------------------------------
 
-local PAGE = { id = "trends", title = "Trends", order = 48, build = buildPage, refresh = refreshPage }
+local PAGE = { id = "trends", title = L["Trends"], order = 48, build = buildPage, refresh = refreshPage }
 
 function Trends:OnEnable()
   HB:Listen(self, "HB_NODE_GATHERED", onLoot)

@@ -1,4 +1,5 @@
 local ADDON, ns = ...
+local L = ns.L
 
 -- BestSpot module (spec §4.5): ranks zones across saved sessions and spots
 -- within the current zone. Clicking a spot sets a map waypoint.
@@ -33,7 +34,7 @@ local function money(copper) return Format.Money(copper, HB.db.profile.goldStyle
 
 local function mapName(mapID)
   local info = C_Map and C_Map.GetMapInfo and C_Map.GetMapInfo(mapID)
-  return info and info.name or ("Map " .. tostring(mapID))
+  return info and info.name or L["Map %s"]:format(tostring(mapID))
 end
 
 local function currentMapID()
@@ -48,26 +49,26 @@ local function grey(text) return GREY .. text .. "|r" end
 
 -- Columns + 4 px pad + 16 px scrollbar must be <= 440: zones 420, spots 420.
 local ZONE_COLUMNS = {
-  { key = "zone", title = "Zone", width = 125, align = "LEFT" },
-  { key = "time", title = "Time", width = 50, align = "RIGHT" },
-  { key = "nodes", title = "Nodes", width = 40, align = "RIGHT" },
-  { key = "gph", title = "Gold/hr", width = 75, align = "RIGHT" },
-  { key = "perNode", title = "Value/node", width = 70, align = "RIGHT" },
-  { key = "nph", title = "Nodes/hr", width = 60, align = "RIGHT" },
+  { key = "zone", title = L["Zone"], width = 125, align = "LEFT" },
+  { key = "time", title = L["Time"], width = 50, align = "RIGHT" },
+  { key = "nodes", title = L["Nodes"], width = 40, align = "RIGHT" },
+  { key = "gph", title = L["Gold/hr"], width = 75, align = "RIGHT" },
+  { key = "perNode", title = L["Value/node"], width = 70, align = "RIGHT" },
+  { key = "nph", title = L["Nodes/hr"], width = 60, align = "RIGHT" },
 }
 
 local SPOT_COLUMNS = {
-  { key = "spot", title = "Spot", width = 150, align = "LEFT" },
-  { key = "kind", title = "Kind", width = 60, align = "LEFT" },
-  { key = "gathers", title = "Gathers", width = 70, align = "RIGHT" },
-  { key = "perNode", title = "Value/node", width = 140, align = "RIGHT" },
+  { key = "spot", title = L["Spot"], width = 150, align = "LEFT" },
+  { key = "kind", title = L["Kind"], width = 60, align = "LEFT" },
+  { key = "gathers", title = L["Gathers"], width = 70, align = "RIGHT" },
+  { key = "perNode", title = L["Value/node"], width = 140, align = "RIGHT" },
 }
 
 local function zoneCell(row, key)
   local text
   if key == "zone" then
     text = mapName(row.mapID)
-    if row.lowData then text = text .. " (low data)" end
+    if row.lowData then text = L["%s (low data)"]:format(text) end
     return row.lowData and grey(text) or text
   elseif key == "time" then
     text = Format.Duration(row.seconds)
@@ -92,7 +93,7 @@ local function spotCell(row, key)
   local text, icon
   if key == "spot" then
     text = spotLabel(row)
-    if row.lowData then text = text .. " (low data)" end
+    if row.lowData then text = L["%s (low data)"]:format(text) end
   elseif key == "kind" then
     text = ""
     icon = Theme.ICONS and Theme.ICONS[row.kind] or nil
@@ -150,7 +151,7 @@ local function refreshPage(body)
     local rows = spotRows(mapID)
     ui.spots:SetRows(rows, spotCell)
     ui.empty:SetShown(#rows == 0)
-    ui.hint:SetText(mapID and (mapName(mapID) .. " " .. DASH .. " click a spot to set a waypoint") or "")
+    ui.hint:SetText(mapID and L["%s \226\128\148 click a spot to set a waypoint"]:format(mapName(mapID)) or "")
   else
     ui.empty:Hide()
     ui.hint:SetText("")
@@ -166,8 +167,8 @@ local function buildPage(body)
   body.bestspot = ui
 
   ui.scope = W.Dropdown(body, 170, {
-    { value = "zones", text = "Zones" },
-    { value = "spots", text = "Spots in current zone" },
+    { value = "zones", text = L["Zones"] },
+    { value = "spots", text = L["Spots in current zone"] },
   }, function() return cfg().scope end, function(v)
     cfg().scope = v
     refreshPage(body)
@@ -175,9 +176,9 @@ local function buildPage(body)
   ui.scope:SetPoint("TOPLEFT", body, "TOPLEFT", 0, 0)
 
   ui.metric = W.Dropdown(body, 150, {
-    { value = "gph", text = "Gold per hour" },
-    { value = "perNode", text = "Value per node" },
-    { value = "nodesPerHour", text = "Nodes per hour" },
+    { value = "gph", text = L["Gold per hour"] },
+    { value = "perNode", text = L["Value per node"] },
+    { value = "nodesPerHour", text = L["Nodes per hour"] },
   }, function() return cfg().metric end, function(v)
     cfg().metric = v
     refreshPage(body)
@@ -201,7 +202,7 @@ local function buildPage(body)
 
   ui.empty = body:CreateFontString(nil, "OVERLAY", "HarvestbookFontBody")
   ui.empty:SetPoint("TOPLEFT", ui.spots, "TOPLEFT", 4, -30)
-  ui.empty:SetText("No spots recorded in this zone yet.")
+  ui.empty:SetText(L["No spots recorded in this zone yet."])
   ui.empty:SetTextColor(Theme:Color("grey"))
   ui.empty:Hide()
 end
@@ -210,7 +211,7 @@ end
 -- Lifecycle
 ---------------------------------------------------------------------------
 
-local PAGE = { id = "bestspot", title = "Best Spot", order = 30, build = buildPage, refresh = refreshPage }
+local PAGE = { id = "bestspot", title = L["Best Spot"], order = 30, build = buildPage, refresh = refreshPage }
 
 local function onChanged() HB.UI:RefreshPage("bestspot") end
 

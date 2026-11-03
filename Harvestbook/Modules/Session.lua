@@ -1,4 +1,5 @@
 local ADDON, ns = ...
+local L = ns.L
 
 -- Session module (spec §4.1): start/pause/resume/stop, auto-start on the first
 -- gather, auto-stop after idle minutes and at the next login, auto-pause (instance, mailbox, auction house, AFK) with optional
@@ -23,7 +24,7 @@ local TOP_MATERIALS = 8
 local MAX_GOAL_BARS = 3
 local DASH = "\226\128\148"
 local DOT = " \194\183 "
-local KIND_LABELS = { herb = "Herbalism", ore = "Mining", skin = "Skinning" }
+local KIND_LABELS = { herb = L["Herbalism"], ore = L["Mining"], skin = L["Skinning"] }
 local SORT_KEYS = { name = true, count = true, perHour = true, unit = true, value = true }
 
 local ticker
@@ -62,10 +63,10 @@ end
 
 local function ago(seconds)
   seconds = math.max(0, seconds or 0)
-  if seconds < 60 then return string.format("%ds", seconds) end
-  if seconds < 3600 then return string.format("%dm", math.floor(seconds / 60)) end
-  if seconds < 86400 then return string.format("%dh", math.floor(seconds / 3600)) end
-  return string.format("%dd", math.floor(seconds / 86400))
+  if seconds < 60 then return L["%ds"]:format(seconds) end
+  if seconds < 3600 then return L["%dm"]:format(math.floor(seconds / 60)) end
+  if seconds < 86400 then return L["%dh"]:format(math.floor(seconds / 3600)) end
+  return L["%dd"]:format(math.floor(seconds / 86400))
 end
 
 ---------------------------------------------------------------------------
@@ -74,23 +75,23 @@ end
 
 local function companionState(s)
   if not s then return "" end
-  if s.state == "paused" then return "Paused" end
+  if s.state == "paused" then return L["Paused"] end
   local found, n = nil, 0
   for kind, label in pairs(KIND_LABELS) do
     if (s.nodes[kind] or 0) > 0 then found, n = label, n + 1 end
   end
-  if n > 1 then return "Mixed" end
+  if n > 1 then return L["Mixed"] end
   return found or ""
 end
 
 local function updateStatus()
   local s = cur()
   if not s then
-    HB.UI:SetStatus("No session", "grey")
+    HB.UI:SetStatus(L["No session"], "grey")
   elseif s.state == "running" then
-    HB.UI:SetStatus("Session running" .. DOT .. Format.Duration(SessionMath.ActiveSeconds(s, time())), "green")
+    HB.UI:SetStatus(L["Session running \194\183 %s"]:format(Format.Duration(SessionMath.ActiveSeconds(s, time()))), "green")
   else
-    HB.UI:SetStatus("Paused", "grey")
+    HB.UI:SetStatus(L["Paused"], "grey")
   end
   HB.UI:SetCompanionState(companionState(s))
 end
@@ -218,14 +219,14 @@ function Session:Start()
   elseif s.state == "paused" then
     self:Resume()
   else
-    HB:Msg("a session is already running.")
+    HB:Msg(L["a session is already running."])
   end
 end
 
 function Session:Pause()
   local s = cur()
   if not s or s.state ~= "running" then
-    HB:Msg("no running session to pause.")
+    HB:Msg(L["no running session to pause."])
     return
   end
   SessionMath.Pause(s, time())
@@ -236,7 +237,7 @@ end
 function Session:Resume()
   local s = cur()
   if not s or s.state ~= "paused" then
-    HB:Msg("no paused session to resume.")
+    HB:Msg(L["no paused session to resume."])
     return
   end
   SessionMath.Resume(s, time())
@@ -256,7 +257,7 @@ end
 
 function Session:Stop()
   if not cur() then
-    HB:Msg("no session to stop.")
+    HB:Msg(L["no session to stop."])
     return
   end
   finish(false)
@@ -268,7 +269,7 @@ checkIdle = function()
   local minutes = opts.idleMinutes or 5
   if SessionMath.IdleSeconds(s, time()) < minutes * 60 then return false end
   if finish(true) then
-    HB:Msg(string.format("session ended after %d min without a gather (saved to history).", minutes))
+    HB:Msg(L["session ended after %d min without a gather (saved to history)."], minutes)
   end
   return true
 end
@@ -284,10 +285,10 @@ local function closeLeftover()
   if not s then return end
   if profile().session.keepOnLogout then return end
   if SessionMath.ShouldResume(savedAtLoad, time(), RESUME_WINDOW) then
-    HB:Msg("welcome back, your session is still running.")
+    HB:Msg(L["welcome back, your session is still running."])
     return
   end
-  if finish(true) then HB:Msg("your session from the last login was saved to history.") end
+  if finish(true) then HB:Msg(L["your session from the last login was saved to history."]) end
 end
 
 function Session:Reset()
@@ -299,7 +300,7 @@ end
 -- Asks before Reset (page button and /hb reset).
 function Session:ConfirmReset()
   if not cur() then
-    HB:Msg("no session to reset.")
+    HB:Msg(L["no session to reset."])
     return
   end
   StaticPopup_Show("HARVESTBOOK_SESSION_RESET")
@@ -412,20 +413,20 @@ end
 ---------------------------------------------------------------------------
 
 local COLUMNS = {
-  { key = "name", title = "Material", width = 150, align = "LEFT", sortable = true },
-  { key = "count", title = "Count", width = 50, align = "RIGHT", sortable = true },
-  { key = "perHour", title = "Per hour", width = 60, align = "RIGHT", sortable = true },
-  { key = "unit", title = "Price", width = 75, align = "RIGHT", sortable = true },
-  { key = "value", title = "Value", width = 85, align = "RIGHT", sortable = true },
+  { key = "name", title = L["Material"], width = 150, align = "LEFT", sortable = true },
+  { key = "count", title = L["Count"], width = 50, align = "RIGHT", sortable = true },
+  { key = "perHour", title = L["Per hour"], width = 60, align = "RIGHT", sortable = true },
+  { key = "unit", title = L["Price"], width = 75, align = "RIGHT", sortable = true },
+  { key = "value", title = L["Value"], width = 85, align = "RIGHT", sortable = true },
 }
 
 local TOTALS = {
-  { key = "time", label = "Time" },
-  { key = "nodes", label = "Nodes herb/ore/skin" },
-  { key = "materials", label = "Materials" },
-  { key = "gold", label = "Gold" },
-  { key = "gph", label = "Gold/hr" },
-  { key = "nph", label = "Nodes/hr" },
+  { key = "time", label = L["Time"] },
+  { key = "nodes", label = L["Nodes herb/ore/skin"] },
+  { key = "materials", label = L["Materials"] },
+  { key = "gold", label = L["Gold"] },
+  { key = "gph", label = L["Gold/hr"] },
+  { key = "nph", label = L["Nodes/hr"] },
 }
 
 local TOTALS_SLOT = 146 -- 3 slots = 438 px
@@ -473,16 +474,16 @@ local function showRowTooltip(row, rowFrame, cellKey)
   if cellKey == "unit" then
     GameTooltip:AddLine(row.name, 1, 1, 1)
     if row.source == "none" then
-      GameTooltip:AddLine("no price found", Theme:Color("grey"))
+      GameTooltip:AddLine(L["no price found"], Theme:Color("grey"))
     else
       local label = HB.Pricing.SOURCE_LABELS[row.source] or tostring(row.source)
-      GameTooltip:AddDoubleLine("Source", label, 1, 0.82, 0, 1, 1, 1)
+      GameTooltip:AddDoubleLine(L["Source"], label, 1, 0.82, 0, 1, 1, 1)
       if profile().pricing.ahCut and ns.PriceChain.AH_SOURCES[row.source] then
-        GameTooltip:AddLine("after the 5% auction house cut", Theme:Color("grey"))
+        GameTooltip:AddLine(L["after the 5% auction house cut"], Theme:Color("grey"))
       end
       local cached = HB.db.global.prices[row.itemKey]
       if cached and cached.time then
-        GameTooltip:AddLine("cached " .. ago(time() - cached.time) .. " ago", Theme:Color("grey"))
+        GameTooltip:AddLine(L["cached %s ago"]:format(ago(time() - cached.time)), Theme:Color("grey"))
       end
     end
   elseif row.link then
@@ -508,11 +509,11 @@ refreshTotals = function(body)
     v.gold = money(sum.copper)
     v.gph = sum.gph and money(sum.gph) or DASH
     v.nph = secs >= 60 and Format.Thousands(nodes / secs * 3600) or DASH
-    ui.footer:SetText(string.format("This session: %d materials of %d kinds, worth %s" .. DOT .. "%s/hr",
+    ui.footer:SetText(L["This session: %d materials of %d kinds, worth %s \194\183 %s/hr"]:format(
       sum.materials, sum.kinds, money(sum.copper), sum.gph and money(sum.gph) or DASH))
     ui.footer:SetTextColor(1, 1, 1)
   else
-    ui.footer:SetText("No session " .. DASH .. " gather a node or press Start.")
+    ui.footer:SetText(L["No session \226\128\148 gather a node or press Start."])
     ui.footer:SetTextColor(Theme:Color("grey"))
   end
   for _, t in ipairs(TOTALS) do ui.totals[t.key]:SetText(v[t.key] or DASH) end
@@ -545,13 +546,13 @@ local function buildPage(body)
   local function action(method)
     return function() HB:SafeCall("Session", Session[method], Session) end
   end
-  ui.start = W.RedButton(body, "Start", action("Start"))
+  ui.start = W.RedButton(body, L["Start"], action("Start"))
   ui.start:SetPoint("TOPLEFT", body, "TOPLEFT", 0, 0)
-  ui.pause = W.RedButton(body, "Pause", action("Pause"))
+  ui.pause = W.RedButton(body, L["Pause"], action("Pause"))
   ui.pause:SetPoint("LEFT", ui.start, "RIGHT", 6, 0)
-  ui.resume = W.RedButton(body, "Resume", action("Resume"))
+  ui.resume = W.RedButton(body, L["Resume"], action("Resume"))
   ui.resume:SetPoint("LEFT", ui.pause, "RIGHT", 6, 0)
-  ui.stop = W.RedButton(body, "Stop", action("Stop"))
+  ui.stop = W.RedButton(body, L["Stop"], action("Stop"))
   ui.stop:SetPoint("LEFT", ui.resume, "RIGHT", 6, 0)
 
   -- Totals: two rows of three slots (TOTALS_SLOT px each) so the strip fits
@@ -597,16 +598,16 @@ local function buildPage(body)
   ui.footer:SetJustifyH("LEFT")
   ui.footer:SetWordWrap(false)
 
-  ui.prices = W.RedButton(body, "Refresh prices", function() HB:RefreshSessionPrices() end)
+  ui.prices = W.RedButton(body, L["Refresh prices"], function() HB:RefreshSessionPrices() end)
   ui.prices:SetPoint("BOTTOMLEFT", body, "BOTTOMLEFT", 0, 0)
-  ui.reset = W.RedButton(body, "Reset", function() Session:ConfirmReset() end)
+  ui.reset = W.RedButton(body, L["Reset"], function() Session:ConfirmReset() end)
   ui.reset:SetPoint("LEFT", ui.prices, "RIGHT", 6, 0)
-  ui.post = W.RedButton(body, "Post to chat", function(btn) postToChat(btn) end)
+  ui.post = W.RedButton(body, L["Post to chat"], function(btn) postToChat(btn) end)
   ui.post:SetPoint("LEFT", ui.reset, "RIGHT", 6, 0)
 end
 
 StaticPopupDialogs["HARVESTBOOK_SESSION_RESET"] = {
-  text = "Discard the current gathering session? Its materials and time will not be saved.",
+  text = L["Discard the current gathering session? Its materials and time will not be saved."],
   button1 = YES, button2 = CANCEL,
   OnAccept = function() HB:SafeCall("Session", Session.Reset, Session) end,
   timeout = 0, whileDead = true, hideOnEscape = true, preferredIndex = 3,
@@ -621,7 +622,7 @@ local function chatLine()
   if not s then return nil end
   local now = time()
   local sum = SessionMath.Summary(s, now, priceFn())
-  return string.format("Harvestbook: %s materials (%d kinds), %s in %s " .. DASH .. " %s/hr",
+  return L["Harvestbook: %s materials (%d kinds), %s in %s \226\128\148 %s/hr"]:format(
     Format.Thousands(sum.materials), sum.kinds, money(sum.copper),
     Format.Duration(SessionMath.ActiveSeconds(s, now)), sum.gph and money(sum.gph) or DASH)
 end
@@ -648,12 +649,12 @@ postToChat = function(owner)
     return
   end
   MenuUtil.CreateContextMenu(owner, function(_, root)
-    root:CreateTitle("Post to chat")
-    local party = root:CreateButton("Party", function() choose(partyChannel()) end)
+    root:CreateTitle(L["Post to chat"])
+    local party = root:CreateButton(L["Party"], function() choose(partyChannel()) end)
     party:SetEnabled(IsInGroup() and true or false)
-    local guild = root:CreateButton("Guild", function() choose("GUILD") end)
+    local guild = root:CreateButton(L["Guild"], function() choose("GUILD") end)
     guild:SetEnabled(IsInGuild() and true or false)
-    root:CreateButton("Say", function() choose("SAY") end)
+    root:CreateButton(L["Say"], function() choose("SAY") end)
   end)
 end
 
@@ -673,7 +674,7 @@ local function lineRow(parent, y)
   return label, value
 end
 
-local SESSION_LINES = { "Time", "Nodes", "Gold", "Gold/hr", "Materials", "Last rare" }
+local SESSION_LINES = { L["Time"], L["Nodes"], L["Gold"], L["Gold/hr"], L["Materials"], L["Last rare"] }
 
 local function buildSessionTab(f)
   f.values = {}
@@ -791,11 +792,11 @@ end
 -- Lifecycle
 ---------------------------------------------------------------------------
 
-local PAGE = { id = "session", title = "Session", order = 10, build = buildPage, refresh = refreshPage }
+local PAGE = { id = "session", title = L["Session"], order = 10, build = buildPage, refresh = refreshPage }
 local TABS = {
-  { id = "session", title = "Session", order = 10, build = buildSessionTab, refresh = refreshSessionTab },
-  { id = "materials", title = "Materials", order = 20, build = buildMaterialsTab, refresh = refreshMaterialsTab },
-  { id = "log", title = "Log", order = 30, build = buildLogTab, refresh = refreshLogTab },
+  { id = "session", title = L["Session"], order = 10, build = buildSessionTab, refresh = refreshSessionTab },
+  { id = "materials", title = L["Materials"], order = 20, build = buildMaterialsTab, refresh = refreshMaterialsTab },
+  { id = "log", title = L["Log"], order = 30, build = buildLogTab, refresh = refreshLogTab },
 }
 
 local function onEvent(event, fn)

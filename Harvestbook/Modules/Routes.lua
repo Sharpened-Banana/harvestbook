@@ -1,4 +1,5 @@
 local ADDON, ns = ...
+local L = ns.L
 
 -- Routes module: builds a farming loop from the player's node log
 -- (Logic/RouteBuilder) and shows it on the world map as numbered stops with
@@ -24,7 +25,7 @@ local HBDPins = LibStub("HereBeDragons-Pins-2.0", true)
 local CIRCLE = "Interface\\CharacterFrame\\TempPortraitAlphaMask"
 local STOP_SIZE = 18
 local DOT_SIZE = 5
-local KIND_LABEL = { herb = "Herb", ore = "Ore", skin = "Skin" }
+local KIND_LABEL = { herb = L["Herb"], ore = L["Ore"], skin = L["Skin"] }
 
 local active    -- sanitised copy of HB.char.route, or nil
 local curMap    -- mapID shown by the pager
@@ -35,7 +36,7 @@ local function cfg() return HB.db.profile.routes end
 
 local function mapName(mapID)
   local info = C_Map and C_Map.GetMapInfo and C_Map.GetMapInfo(mapID)
-  return info and info.name or ("Map " .. tostring(mapID))
+  return info and info.name or L["Map %s"]:format(tostring(mapID))
 end
 
 local function refresh() HB.UI:RefreshPage("routes") end
@@ -145,7 +146,7 @@ local function buildRoute()
   local c = cfg()
   local built = RouteBuilder.Build(RouteBuilder.Spots(zone, c.kinds, c.minGathers))
   if #built.stops == 0 then
-    HB:Msg("No spots in %s match these filters.", mapName(curMap))
+    HB:Msg(L["No spots in %s match these filters."], mapName(curMap))
     return
   end
   local stops = {}
@@ -173,14 +174,14 @@ end
 
 -- Columns + 4 px pad + 16 px scrollbar must be <= 440.
 local STOP_COLUMNS = {
-  { key = "number", title = "Stop", width = 50, align = "RIGHT" },
-  { key = "name", title = "Node", width = 290, align = "LEFT" },
-  { key = "gathers", title = "Gathers", width = 80, align = "RIGHT" },
+  { key = "number", title = L["Stop"], width = 50, align = "RIGHT" },
+  { key = "name", title = L["Node"], width = 290, align = "LEFT" },
+  { key = "gathers", title = L["Gathers"], width = 80, align = "RIGHT" },
 }
 
 local function stopName(stop)
   local name = stop.nodeID and HB.db.global.nodeNames[stop.nodeID]
-  return name or KIND_LABEL[stop.kind] or "Node"
+  return name or KIND_LABEL[stop.kind] or L["Node"]
 end
 
 local function stopCell(row, key)
@@ -220,7 +221,7 @@ local function refreshPage(body)
     ui.pager:SetText(string.format("%s (%d/%d)", mapName(curMap), index, #zones))
     ui.pager:SetButtonsEnabled(index > 1, index < #zones)
   else
-    ui.pager:SetText("No zones recorded")
+    ui.pager:SetText(L["No zones recorded"])
     ui.pager:SetButtonsEnabled(false, false)
   end
 
@@ -233,8 +234,8 @@ local function refreshPage(body)
   local rows = {}
   if active then
     for i, stop in ipairs(active.stops) do rows[i] = { number = i, stop = stop } end
-    local text = string.format("%s: %d %s", mapName(active.mapID), #rows, #rows == 1 and "stop" or "stops")
-    if active.target > 0 then text = text .. string.format(", waypoint on stop %d", active.target) end
+    local text = (#rows == 1 and L["%s: %d stop"] or L["%s: %d stops"]):format(mapName(active.mapID), #rows)
+    if active.target > 0 then text = text .. L[", waypoint on stop %d"]:format(active.target) end
     ui.status:SetText(text)
   else
     ui.status:SetText("")
@@ -266,7 +267,7 @@ end
 
 local MIN_GATHERS = {}
 for _, n in ipairs({ 1, 2, 3, 5, 10 }) do
-  MIN_GATHERS[#MIN_GATHERS + 1] = { value = n, text = "Minimum gathers: " .. n }
+  MIN_GATHERS[#MIN_GATHERS + 1] = { value = n, text = L["Minimum gathers: %d"]:format(n) }
 end
 
 local function buildPage(body)
@@ -278,11 +279,11 @@ local function buildPage(body)
   ui.pager:SetPoint("TOPLEFT", body, "TOPLEFT", 0, 0)
   ui.pager:SetWidth(420)
 
-  local herb = kindToggle(body, "herb", "Herbs")
+  local herb = kindToggle(body, "herb", L["Herbs"])
   herb:SetPoint("TOPLEFT", body, "TOPLEFT", 0, -28)
-  local ore = kindToggle(body, "ore", "Ore")
+  local ore = kindToggle(body, "ore", L["Ore"])
   ore:SetPoint("LEFT", herb, "LEFT", 75, 0)
-  local skin = kindToggle(body, "skin", "Skinning")
+  local skin = kindToggle(body, "skin", L["Skinning"])
   skin:SetPoint("LEFT", ore, "LEFT", 60, 0)
   ui.toggles = { herb, ore, skin }
 
@@ -291,11 +292,11 @@ local function buildPage(body)
     function(v) cfg().minGathers = v end)
   ui.minGathers:SetPoint("LEFT", skin, "LEFT", 95, 0)
 
-  ui.build = W.RedButton(body, "Build", safely(buildRoute))
+  ui.build = W.RedButton(body, L["Build"], safely(buildRoute))
   ui.build:SetPoint("TOPLEFT", body, "TOPLEFT", 0, -58)
-  ui.nextStop = W.RedButton(body, "Next stop", safely(nextStop))
+  ui.nextStop = W.RedButton(body, L["Next stop"], safely(nextStop))
   ui.nextStop:SetPoint("LEFT", ui.build, "RIGHT", 8, 0)
-  ui.clear = W.RedButton(body, "Clear route", safely(function() setRoute(nil) end))
+  ui.clear = W.RedButton(body, L["Clear route"], safely(function() setRoute(nil) end))
   ui.clear:SetPoint("LEFT", ui.nextStop, "RIGHT", 8, 0)
 
   ui.status = body:CreateFontString(nil, "OVERLAY", "HarvestbookFontBody")
@@ -310,7 +311,7 @@ local function buildPage(body)
 
   ui.empty = body:CreateFontString(nil, "OVERLAY", "HarvestbookFontBody")
   ui.empty:SetPoint("TOPLEFT", ui.stops, "TOPLEFT", 4, -30)
-  ui.empty:SetText("No active route. Choose filters and press Build.")
+  ui.empty:SetText(L["No active route. Choose filters and press Build."])
   ui.empty:SetTextColor(Theme:Color("grey"))
 end
 
@@ -318,7 +319,7 @@ end
 -- Lifecycle
 ---------------------------------------------------------------------------
 
-local PAGE = { id = "routes", title = "Routes", order = 35, build = buildPage, refresh = refreshPage }
+local PAGE = { id = "routes", title = L["Routes"], order = 35, build = buildPage, refresh = refreshPage }
 
 local profileOwner = {} -- unique AceDB callback owner (see MapPins)
 

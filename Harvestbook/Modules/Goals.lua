@@ -1,4 +1,5 @@
 local ADDON, ns = ...
+local L = ns.L
 
 -- Goals module (spec §4.6): session goals (materials / gold / minutes) with
 -- progress bars, and rare-drop attempt counters.
@@ -72,12 +73,12 @@ end
 
 local function goalLabel(g)
   if g.type == "materials" then
-    local name = g.itemID and itemName(g.itemID) or "Any material"
+    local name = g.itemID and itemName(g.itemID) or L["Any material"]
     return name .. " x" .. Format.Thousands(g.target)
   elseif g.type == "gold" then
     return money(g.target)
   end
-  return Format.Thousands(g.target) .. " min"
+  return L["%s min"]:format(Format.Thousands(g.target))
 end
 
 local function fmtFor(g)
@@ -209,43 +210,43 @@ end
 ---------------------------------------------------------------------------
 
 local TYPE_OPTIONS = {
-  { value = "materials", text = "Materials" },
-  { value = "gold", text = "Gold" },
-  { value = "minutes", text = "Minutes" },
+  { value = "materials", text = L["Materials"] },
+  { value = "gold", text = L["Gold"] },
+  { value = "minutes", text = L["Minutes"] },
 }
 local KIND_OPTIONS = {
-  { value = "any", text = "Any" },
-  { value = "herb", text = "Herb" },
-  { value = "ore", text = "Ore" },
-  { value = "skin", text = "Skin" },
+  { value = "any", text = L["Any"] },
+  { value = "herb", text = L["Herb"] },
+  { value = "ore", text = L["Ore"] },
+  { value = "skin", text = L["Skin"] },
 }
 local TARGET_HINT = {
-  materials = "Item (Shift-click, blank = any)  /  count",
-  gold = "Gold target (in gold)",
-  minutes = "Minutes target",
+  materials = L["Item (Shift-click, blank = any)  /  count"],
+  gold = L["Gold target (in gold)"],
+  minutes = L["Minutes target"],
 }
 
 -- Columns total 395 + 4 pad + 16 scrollbar = 415 <= 440.
 local RARE_COLUMNS = {
-  { key = "name", title = "Item", width = 150, align = "LEFT" },
-  { key = "kind", title = "Kind", width = 50, align = "LEFT" },
-  { key = "attempts", title = "Attempts", width = 65, align = "RIGHT" },
-  { key = "found", title = "Found", width = 50, align = "RIGHT" },
-  { key = "last", title = "Last found", width = 80, align = "RIGHT" },
+  { key = "name", title = L["Item"], width = 150, align = "LEFT" },
+  { key = "kind", title = L["Kind"], width = 50, align = "LEFT" },
+  { key = "attempts", title = L["Attempts"], width = 65, align = "RIGHT" },
+  { key = "found", title = L["Found"], width = 50, align = "RIGHT" },
+  { key = "last", title = L["Last found"], width = 80, align = "RIGHT" },
 }
 
 local addType, addKind = "materials", "any"
 
 local function kindText(k)
-  if k == "herb" then return "Herb" elseif k == "ore" then return "Ore" elseif k == "skin" then return "Skin" end
-  return "Any"
+  if k == "herb" then return L["Herb"] elseif k == "ore" then return L["Ore"] elseif k == "skin" then return L["Skin"] end
+  return L["Any"]
 end
 
 local function lastText(e)
-  if (e.found or 0) == 0 then return "never" end
+  if (e.found or 0) == 0 then return L["never"] end
   local n = e.sinceLast or 0
-  if n == 0 then return "last gather" end
-  return n .. " gathers ago"
+  if n == 0 then return L["last gather"] end
+  return L["%d gathers ago"]:format(n)
 end
 
 local function rareCell(row, key)
@@ -296,7 +297,7 @@ local function buildPage(body)
   local ui = {}
   body.goals = ui
 
-  local h1 = W.Heading(body, "Session goals")
+  local h1 = W.Heading(body, L["Session goals"])
   h1:SetPoint("TOPLEFT", body, "TOPLEFT", 0, 0)
   h1:SetPoint("TOPRIGHT", body, "TOPRIGHT", 0, 0)
 
@@ -321,7 +322,7 @@ local function buildPage(body)
   ui.empty = body:CreateFontString(nil, "OVERLAY", "HarvestbookFontSmall")
   ui.empty:SetPoint("TOPLEFT", body, "TOPLEFT", 4, -32)
   ui.empty:SetTextColor(Theme:Color("grey"))
-  ui.empty:SetText("No goals yet. Add one below.")
+  ui.empty:SetText(L["No goals yet. Add one below."])
 
   ui.hint = body:CreateFontString(nil, "OVERLAY", "HarvestbookFontSmall")
   ui.hint:SetPoint("TOPLEFT", body, "TOPLEFT", 4, -132)
@@ -339,24 +340,24 @@ local function buildPage(body)
   ui.target = newInput(body, 70, true)
   ui.target:SetPoint("LEFT", ui.item, "RIGHT", 10, 0)
 
-  ui.add = W.RedButton(body, "Add goal", function()
+  ui.add = W.RedButton(body, L["Add goal"], function()
     local target = GoalEval.ParseTarget(ui.target:GetText(), addType == "gold")
     if not target then
-      say(addType == "gold" and "Enter a whole number of gold, like 50000, 250k or 2.5m."
-        or "Enter a whole number greater than zero.")
+      say(addType == "gold" and L["Enter a whole number of gold, like 50000, 250k or 2.5m."]
+        or L["Enter a whole number greater than zero."])
       return
     end
     local itemID
     if addType == "materials" then
       local text = ui.item:GetText()
       itemID = parseItemID(text)
-      if text and text:match("%S") and not itemID then say("Could not read an item from that input.") return end
+      if text and text:match("%S") and not itemID then say(L["Could not read an item from that input."]) return end
     end
     if addType == "gold" then target = target * 10000 end
     target = math.floor(target)
     if target <= 0 then return end
     local g, err = Goals:AddGoal(addType, itemID, target)
-    if not g then say("You can track up to " .. MAX_GOALS .. " goals.") return end
+    if not g then say(L["You can track up to %d goals."]:format(MAX_GOALS)) return end
     ui.item:SetText("")
     ui.target:SetText("")
     ui.item:ClearFocus()
@@ -365,7 +366,7 @@ local function buildPage(body)
   end)
   ui.add:SetPoint("LEFT", ui.target, "RIGHT", 10, 0)
 
-  local h2 = W.Heading(body, "Rare drops")
+  local h2 = W.Heading(body, L["Rare drops"])
   h2:SetPoint("TOPLEFT", body, "TOPLEFT", 0, -182)
   h2:SetPoint("TOPRIGHT", body, "TOPRIGHT", 0, -182)
 
@@ -384,9 +385,9 @@ local function buildPage(body)
   ui.rareItem = newInput(body, 150, false)
   ui.rareItem:SetPoint("LEFT", ui.kindDD, "RIGHT", 12, 0)
 
-  ui.rareAdd = W.RedButton(body, "Track item", function()
+  ui.rareAdd = W.RedButton(body, L["Track item"], function()
     local itemID = parseItemID(ui.rareItem:GetText())
-    if not itemID then say("Shift-click an item (or type its item ID) to track it.") return end
+    if not itemID then say(L["Shift-click an item (or type its item ID) to track it."]) return end
     Goals:AddRare(itemID, addKind ~= "any" and addKind or nil)
     ui.rareItem:SetText("")
     ui.rareItem:ClearFocus()
@@ -400,11 +401,11 @@ local function buildPage(body)
   tip:SetJustifyH("LEFT")
   tip:SetWordWrap(false)
   tip:SetTextColor(Theme:Color("grey"))
-  tip:SetText("Right-click a row to delete")
+  tip:SetText(L["Right-click a row to delete"])
 end
 
 StaticPopupDialogs["HARVESTBOOK_DELETE_RARE"] = {
-  text = "Stop tracking %s and delete its attempt counter?",
+  text = L["Stop tracking %s and delete its attempt counter?"],
   button1 = YES, button2 = CANCEL,
   OnAccept = function(_, itemID)
     Goals:DeleteRare(itemID)
@@ -417,7 +418,7 @@ StaticPopupDialogs["HARVESTBOOK_DELETE_RARE"] = {
 -- Lifecycle
 ---------------------------------------------------------------------------
 
-local PAGE = { id = "goals", title = "Goals", order = 50, build = buildPage, refresh = refreshPage }
+local PAGE = { id = "goals", title = L["Goals"], order = 50, build = buildPage, refresh = refreshPage }
 
 function Goals:OnEnable()
   pg().nextID = pg().nextID or 0

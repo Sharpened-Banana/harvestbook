@@ -1,4 +1,5 @@
 local ADDON, ns = ...
+local L = ns.L
 
 -- Records module (spec §4.4): personal records, lifetime material totals
 -- (warband and per character) and the session history list.
@@ -49,7 +50,7 @@ end
 
 local function mapName(mapID)
   local info = C_Map and C_Map.GetMapInfo and C_Map.GetMapInfo(mapID)
-  return info and info.name or ("Map " .. tostring(mapID))
+  return info and info.name or L["Map %s"]:format(tostring(mapID))
 end
 
 ---------------------------------------------------------------------------
@@ -191,23 +192,23 @@ end
 ---------------------------------------------------------------------------
 
 local LIFE_COLUMNS = {
-  { key = "name", title = "Item", width = 260, align = "LEFT" },
-  { key = "count", title = "Count", width = 90, align = "RIGHT" },
+  { key = "name", title = L["Item"], width = 260, align = "LEFT" },
+  { key = "count", title = L["Count"], width = 90, align = "RIGHT" },
 }
 
 local HISTORY_COLUMNS = {
-  { key = "date", title = "Date", width = 100, align = "LEFT" },
-  { key = "duration", title = "Duration", width = 60, align = "RIGHT" },
-  { key = "zones", title = "Zones", width = 100, align = "LEFT" },
-  { key = "gold", title = "Gold", width = 80, align = "RIGHT" },
-  { key = "gph", title = "Gold/hr", width = 80, align = "RIGHT" },
+  { key = "date", title = L["Date"], width = 100, align = "LEFT" },
+  { key = "duration", title = L["Duration"], width = 60, align = "RIGHT" },
+  { key = "zones", title = L["Zones"], width = 100, align = "LEFT" },
+  { key = "gold", title = L["Gold"], width = 80, align = "RIGHT" },
+  { key = "gph", title = L["Gold/hr"], width = 80, align = "RIGHT" },
 }
 
 local DETAIL_COLUMNS = {
-  { key = "name", title = "Item", width = 170, align = "LEFT" },
-  { key = "count", title = "Count", width = 60, align = "RIGHT" },
-  { key = "price", title = "Price", width = 80, align = "RIGHT" },
-  { key = "value", title = "Value", width = 90, align = "RIGHT" },
+  { key = "name", title = L["Item"], width = 170, align = "LEFT" },
+  { key = "count", title = L["Count"], width = 60, align = "RIGHT" },
+  { key = "price", title = L["Price"], width = 80, align = "RIGHT" },
+  { key = "value", title = L["Value"], width = 90, align = "RIGHT" },
 }
 
 local function zonesText(s)
@@ -273,9 +274,9 @@ local function recordLines()
     return { label = name, value = rec and rec.value and (fmt(rec.value) .. (extra or "")) or DASH }
   end
   return {
-    line("Best gold/hr (10+ min)", r.bestGph, function(v) return money(v) .. "/hr" end),
-    line("Longest session", r.longest, Format.Duration),
-    line("Most nodes in a session", r.mostNodes, Format.Thousands),
+    line(L["Best gold/hr (10+ min)"], r.bestGph, function(v) return L["%s/hr"]:format(money(v)) end),
+    line(L["Longest session"], r.longest, Format.Duration),
+    line(L["Most nodes in a session"], r.mostNodes, Format.Thousands),
   }
 end
 
@@ -345,8 +346,8 @@ local function buildPage(body)
   end
 
   ui.mode = W.Dropdown(ui.main, 160, {
-    { value = "warband", text = "Warband" },
-    { value = "char", text = "This character" },
+    { value = "warband", text = L["Warband"] },
+    { value = "char", text = L["This character"] },
   }, function() return viewMode end, function(v)
     viewMode = v
     refreshPage(body)
@@ -355,10 +356,10 @@ local function buildPage(body)
 
   local lifeTitle = ui.main:CreateFontString(nil, "OVERLAY", "HarvestbookFontSmall")
   lifeTitle:SetPoint("LEFT", ui.mode, "RIGHT", 10, 0)
-  lifeTitle:SetText("Lifetime materials")
+  lifeTitle:SetText(L["Lifetime materials"])
   lifeTitle:SetTextColor(Theme:Color("grey"))
 
-  ui.export = W.RedButton(ui.main, "Export", function()
+  ui.export = W.RedButton(ui.main, L["Export"], function()
     HB:SafeCall("Records", Records.OpenExport, Records)
   end)
   ui.export:SetPoint("TOPRIGHT", ui.main, "TOPRIGHT", 0, -74)
@@ -370,7 +371,7 @@ local function buildPage(body)
 
   local histTitle = ui.main:CreateFontString(nil, "OVERLAY", "HarvestbookFontSmall")
   histTitle:SetPoint("TOPLEFT", ui.life, "BOTTOMLEFT", 4, -8)
-  histTitle:SetText("Session history (click a session for its materials)")
+  histTitle:SetText(L["Session history (click a session for its materials)"])
   histTitle:SetTextColor(Theme:Color("grey"))
 
   ui.history = W.ColumnList(ui.main, HISTORY_COLUMNS)
@@ -386,7 +387,7 @@ local function buildPage(body)
   ui.detail:SetAllPoints(body)
   ui.detail:Hide()
 
-  ui.back = W.RedButton(ui.detail, "< Back", function()
+  ui.back = W.RedButton(ui.detail, L["< Back"], function()
     detailID = nil
     refreshPage(body)
   end)
@@ -400,7 +401,7 @@ local function buildPage(body)
   ui.detailList:SetPoint("TOPLEFT", ui.detail, "TOPLEFT", 0, -30)
   ui.detailList:SetPoint("BOTTOMRIGHT", ui.detail, "BOTTOMRIGHT", 0, 32)
 
-  ui.delete = W.RedButton(ui.detail, "Delete session", function()
+  ui.delete = W.RedButton(ui.detail, L["Delete session"], function()
     if detailID then
       StaticPopup_Show("HARVESTBOOK_DELETE_SESSION", nil, nil, detailID)
     end
@@ -409,7 +410,7 @@ local function buildPage(body)
 end
 
 StaticPopupDialogs["HARVESTBOOK_DELETE_SESSION"] = {
-  text = "Delete this session from your history? This cannot be undone.",
+  text = L["Delete this session from your history? This cannot be undone."],
   button1 = YES, button2 = CANCEL,
   OnAccept = function(_, id)
     HB:SafeCall("Records", Records.DeleteSession, Records, id)
@@ -426,27 +427,33 @@ StaticPopupDialogs["HARVESTBOOK_DELETE_SESSION"] = {
 ---------------------------------------------------------------------------
 
 local PERIOD_OPTIONS = {
-  { value = "day", text = "Per day" },
-  { value = "daily", text = "Per daily reset" },
-  { value = "weekly", text = "Per weekly reset" },
+  { value = "day", text = L["Per day"] },
+  { value = "daily", text = L["Per daily reset"] },
+  { value = "weekly", text = L["Per weekly reset"] },
 }
-local PERIOD_WORD = { day = "day", daily = "reset", weekly = "week" }
+-- Current, average and best lines for each period.
+local PERIOD_LINES = {
+  day = { L["This day"], L["Average per active day"], L["Best day"] },
+  daily = { L["This reset"], L["Average per active reset"], L["Best reset"] },
+  weekly = { L["This week"], L["Average per active week"], L["Best week"] },
+}
 
 local GOLD_COLUMNS = {
-  { key = "period", title = "Period", width = 200, align = "LEFT" },
-  { key = "gold", title = "Gold", width = 150, align = "RIGHT" },
+  { key = "period", title = L["Period"], width = 200, align = "LEFT" },
+  { key = "gold", title = L["Gold"], width = 150, align = "RIGHT" },
 }
 
 local function goldPeriod()
   local p = HB.db.profile.goldPeriod
-  return PERIOD_WORD[p] and p or "day"
+  return PERIOD_LINES[p] and p or "day"
 end
 
 -- Reset keys are the epoch a period ends at; rows show the date it began.
-local function periodLabel(period, key)
+-- weekFormat differs because the CSV export keeps its English label in every locale.
+local function periodLabel(period, key, weekFormat)
   if period == "day" then return key end
   local start = date("%Y-%m-%d", key - GoldLedger.PERIOD_SECONDS[period])
-  return period == "weekly" and ("Week of " .. start) or start
+  return period == "weekly" and (weekFormat or L["Week of %s"]):format(start) or start
 end
 
 local function refreshGold(body)
@@ -458,7 +465,7 @@ local function refreshGold(body)
   ui.total:SetText(money(total))
   if goal then
     local pct = math.min(100, total / goal * 100)
-    ui.bar:SetProgress(total, goal, string.format("Goal: %.1f%%", pct), money)
+    ui.bar:SetProgress(total, goal, L["Goal: %.1f%%"]:format(pct), money)
     ui.bar:Show()
     ui.noGoal:Hide()
   else
@@ -468,12 +475,12 @@ local function refreshGold(body)
   ui.clear:SetEnabled(goal ~= nil)
 
   local sum = GoldLedger.Summary(ledger[period], goldKeys(time())[period])
-  local word = PERIOD_WORD[period]
-  ui.lines[1].label:SetText("This " .. word)
+  local lines = PERIOD_LINES[period]
+  ui.lines[1].label:SetText(lines[1])
   ui.lines[1].value:SetText(money(sum.current))
-  ui.lines[2].label:SetText("Average per active " .. word)
+  ui.lines[2].label:SetText(lines[2])
   ui.lines[2].value:SetText(sum.periods > 0 and money(sum.average) or DASH)
-  ui.lines[3].label:SetText("Best " .. word)
+  ui.lines[3].label:SetText(lines[3])
   ui.lines[3].value:SetText(sum.periods > 0 and money(sum.best) or DASH)
   ui.period:Refresh()
   ui.list:SetRows(GoldLedger.Rows(ledger[period]), function(row, key)
@@ -503,19 +510,19 @@ local function buildGold(body)
 
   local totalLabel
   totalLabel, ui.total = line(0, 190)
-  totalLabel:SetText("All-time gold earned")
+  totalLabel:SetText(L["All-time gold earned"])
 
   ui.bar = W.ProgressBar(body)
   ui.bar:SetPoint("TOPLEFT", body, "TOPLEFT", 0, -22)
   ui.bar:SetPoint("TOPRIGHT", body, "TOPRIGHT", 0, -22)
   ui.noGoal = body:CreateFontString(nil, "OVERLAY", "HarvestbookFontSmall")
   ui.noGoal:SetPoint("TOPLEFT", body, "TOPLEFT", 4, -25)
-  ui.noGoal:SetText("No goal set. Try 5m for 5 million gold.")
+  ui.noGoal:SetText(L["No goal set. Try 5m for 5 million gold."])
   ui.noGoal:SetTextColor(Theme:Color("grey"))
 
   local goalLabel = body:CreateFontString(nil, "OVERLAY", "HarvestbookFontBody")
   goalLabel:SetPoint("TOPLEFT", body, "TOPLEFT", 4, -50)
-  goalLabel:SetText("Gold goal")
+  goalLabel:SetText(L["Gold goal"])
   goalLabel:SetTextColor(Theme:Color("gold"))
 
   local input = CreateFrame("EditBox", nil, body, "InputBoxTemplate")
@@ -529,7 +536,7 @@ local function buildGold(body)
   local function setGoal()
     local target = GoalEval.ParseTarget(input:GetText(), true)
     if not target then
-      HB:Msg("enter a whole number of gold, like 5000000, 250k or 5m.")
+      HB:Msg(L["enter a whole number of gold, like 5000000, 250k or 5m."])
       return
     end
     g().gold.goal = target * 10000
@@ -539,9 +546,9 @@ local function buildGold(body)
   end
   input:SetScript("OnEnterPressed", setGoal)
 
-  ui.set = W.RedButton(body, "Set goal", setGoal)
+  ui.set = W.RedButton(body, L["Set goal"], setGoal)
   ui.set:SetPoint("LEFT", input, "RIGHT", 8, 0)
-  ui.clear = W.RedButton(body, "Clear", function()
+  ui.clear = W.RedButton(body, L["Clear"], function()
     g().gold.goal = nil
     refreshGold(body)
   end)
@@ -568,7 +575,7 @@ local function buildGold(body)
   note:SetPoint("BOTTOMRIGHT", body, "BOTTOMRIGHT", 0, 2)
   note:SetJustifyH("LEFT")
   note:SetWordWrap(false)
-  note:SetText("Estimated value of what you gathered on all characters, at the price when gathered.")
+  note:SetText(L["Estimated value of what you gathered on all characters, at the price when gathered."])
   note:SetTextColor(Theme:Color("grey"))
 end
 
@@ -577,11 +584,11 @@ end
 ---------------------------------------------------------------------------
 
 local EXPORT_OPTIONS = {
-  { value = "sessions", text = "Sessions" },
-  { value = "materials", text = "Materials" },
-  { value = "gold", text = "Gold" },
+  { value = "sessions", text = L["Sessions"] },
+  { value = "materials", text = L["Materials"] },
+  { value = "gold", text = L["Gold"] },
 }
-local EXPORT_HINT = "Press Ctrl+C (Cmd+C on Mac) to copy, then paste into a spreadsheet"
+local EXPORT_HINT = L["Press Ctrl+C (Cmd+C on Mac) to copy, then paste into a spreadsheet"]
 local EXPORT_W, EXPORT_H = 560, 380
 local NAME_RETRIES = 5 -- seconds to wait for item names the client has not loaded
 
@@ -600,7 +607,7 @@ local function exportText()
     return text, pending
   elseif exportKind == "gold" then
     local period = goldPeriod()
-    return Export.Gold(g().gold, period, function(key) return periodLabel(period, key) end)
+    return Export.Gold(g().gold, period, function(key) return periodLabel(period, key, "Week of %s") end)
   end
   return Export.Sessions(g().sessions, {
     date = function(t) return date("%Y-%m-%d %H:%M", t) end,
@@ -649,7 +656,7 @@ local function buildExportWindow()
 
   local title = win:CreateFontString(nil, "OVERLAY", "HarvestbookFontHeading")
   title:SetPoint("TOPLEFT", win, "TOPLEFT", 12, -10)
-  title:SetText("Export to spreadsheet")
+  title:SetText(L["Export to spreadsheet"])
 
   win.kind = W.Dropdown(win, 160, EXPORT_OPTIONS, function() return exportKind end, function(v)
     exportKind = v
@@ -704,7 +711,7 @@ local function buildExportWindow()
   scroll:EnableMouse(true)
   scroll:SetScript("OnMouseDown", function() edit:SetFocus() end)
 
-  local close = W.RedButton(win, "Close", function() win:Hide() end)
+  local close = W.RedButton(win, L["Close"], function() win:Hide() end)
   close:SetPoint("BOTTOMRIGHT", win, "BOTTOMRIGHT", -10, 10)
 
   local hint = win:CreateFontString(nil, "OVERLAY", "HarvestbookFontSmall")
@@ -725,8 +732,8 @@ function Records:OpenExport()
   fillExport(exportWin)
 end
 
-local PAGE = { id = "records", title = "Records", order = 40, build = buildPage, refresh = refreshPage }
-local GOLD_PAGE = { id = "gold", title = "Gold", order = 45, build = buildGold, refresh = refreshGold }
+local PAGE = { id = "records", title = L["Records"], order = 40, build = buildPage, refresh = refreshPage }
+local GOLD_PAGE = { id = "gold", title = L["Gold"], order = 45, build = buildGold, refresh = refreshGold }
 
 local function onChanged()
   HB.UI:RefreshPage("records")

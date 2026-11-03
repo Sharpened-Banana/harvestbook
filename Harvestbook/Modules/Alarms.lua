@@ -1,4 +1,5 @@
 local ADDON, ns = ...
+local L = ns.L
 
 -- Alarms module (spec §4.7): sound, raid-warning-style text and an optional
 -- screen flash for high-value nodes, rare finds, reached goals and broken
@@ -27,6 +28,11 @@ local DEFAULT_SOUND = {
 local DEFAULT_FLASH = { value = false, multiple = false, rare = true, goal = false, record = true }
 local FLASH_SECONDS = 0.6
 local LSM_PREFIX = "LSM: "
+-- Saved values stay the English names above; these are only what the dropdown shows.
+local SOUND_TEXT = {
+  ["Raid warning"] = L["Raid warning"], ["Ready check"] = L["Ready check"],
+  ["Coin"] = L["Coin"], ["Quest complete"] = L["Quest complete"],
+}
 
 local state = {}   -- AlarmEval throttle state ({ lastFire })
 local flashFrame
@@ -123,10 +129,17 @@ end
 -- Evaluation
 ---------------------------------------------------------------------------
 
+-- AlarmEval decides which rule fires; its own text is English, so the player
+-- sees this translated line built from the same label.
+local ALARM_TEXT = {
+  value = L["High-value node: %s"], multiple = L["High-value node: %s"],
+  rare = L["Rare find: %s"], goal = L["Goal reached: %s"], record = L["New record: %s"],
+}
+
 local function fire(ctx)
   ctx.now = GetTime()
   for _, f in ipairs(AlarmEval.Evaluate(cfg(), ctx, state)) do
-    output(f.rule, f.text)
+    output(f.rule, ALARM_TEXT[f.rule]:format(ctx.label))
   end
 end
 
@@ -144,7 +157,7 @@ local function bestItemName(gather, priceFn)
       bestVal, bestName = v, itemName(it.itemID, it.link)
     end
   end
-  return bestName or gather.targetName or "Node"
+  return bestName or gather.targetName or L["Node"]
 end
 
 -- Evaluation is deferred one frame so Session has always processed this gather;
@@ -178,16 +191,16 @@ end
 
 local function goalLabel(g)
   if g.type == "materials" then
-    local name = g.itemID and itemName(g.itemID) or "Any material"
+    local name = g.itemID and itemName(g.itemID) or L["Any material"]
     return name .. " x" .. Format.Thousands(g.target or 0)
   elseif g.type == "gold" then
-    return "Gold goal (" .. money(g.target or 0) .. ")"
+    return L["Gold goal (%s)"]:format(money(g.target or 0))
   end
-  return "Minutes goal (" .. Format.Thousands(g.target or 0) .. " min)"
+  return L["Minutes goal (%s min)"]:format(Format.Thousands(g.target or 0))
 end
 
 local RECORD_NAMES = {
-  bestGph = "Best gold/hr", longest = "Longest session", mostNodes = "Most nodes",
+  bestGph = L["Best gold/hr"], longest = L["Longest session"], mostNodes = L["Most nodes"],
 }
 
 local function recordLabel(name, value)
@@ -201,7 +214,7 @@ end
 
 local function rareLabel(itemID, attempts)
   local label = itemName(itemID)
-  if (attempts or 0) > 0 then label = label .. " after " .. attempts .. " gathers" end
+  if (attempts or 0) > 0 then label = L["%s after %d gathers"]:format(label, attempts) end
   return label
 end
 
@@ -210,15 +223,15 @@ end
 ---------------------------------------------------------------------------
 
 local SAMPLE = {
-  value = "High-value node: Sample Herb (1,000g)",
-  multiple = "High-value node: Sample Ore (3x average)",
-  rare = "Rare find: Sample Rare after 42 gathers",
-  goal = "Goal reached: Sample goal",
-  record = "New record: Best gold/hr 12,345g",
+  value = L["Sample Herb (1,000g)"],
+  multiple = L["Sample Ore (3x average)"],
+  rare = L["Sample Rare after 42 gathers"],
+  goal = L["Sample goal"],
+  record = L["Best gold/hr 12,345g"],
 }
 
 function Alarms:Test(rule)
-  output(rule, SAMPLE[rule] or ("Test: " .. tostring(rule)))
+  output(rule, SAMPLE[rule] and ALARM_TEXT[rule]:format(SAMPLE[rule]) or L["Test: %s"]:format(tostring(rule)))
 end
 
 ---------------------------------------------------------------------------
@@ -226,17 +239,17 @@ end
 ---------------------------------------------------------------------------
 
 local RULES = {
-  { key = "value", label = "Node value" },
-  { key = "multiple", label = "Node vs. average" },
-  { key = "rare", label = "Rare find" },
-  { key = "goal", label = "Goal reached" },
-  { key = "record", label = "Record broken" },
+  { key = "value", label = L["Node value"] },
+  { key = "multiple", label = L["Node vs. average"] },
+  { key = "rare", label = L["Rare find"] },
+  { key = "goal", label = L["Goal reached"] },
+  { key = "record", label = L["Record broken"] },
 }
 
 local function soundOptions()
   local out = {}
-  for _, name in ipairs(SOUND_ORDER) do out[#out + 1] = { value = name, text = name } end
-  out[#out + 1] = { value = "None", text = "None" }
+  for _, name in ipairs(SOUND_ORDER) do out[#out + 1] = { value = name, text = SOUND_TEXT[name] } end
+  out[#out + 1] = { value = "None", text = L["None"] }
   local lib = lsm()
   if lib then
     local list = lib:List("sound")
@@ -287,12 +300,12 @@ local function buildPage(body)
   local ui = { inputs = {}, toggles = {}, dds = {} }
   body.alarms = ui
 
-  local mute = W.Toggle(body, "Mute all alarms",
+  local mute = W.Toggle(body, L["Mute all alarms"],
     function() return cfg().muted end,
     function(on) cfg().muted = on end)
   mute:SetPoint("TOPLEFT", body, "TOPLEFT", 0, 0)
   ui.toggles[#ui.toggles + 1] = mute
-  local note = hint(body, "At most one alarm per 2 seconds.")
+  local note = hint(body, L["At most one alarm per 2 seconds."])
   note:SetPoint("LEFT", mute.label, "RIGHT", 16, 0)
 
   for i, def in ipairs(RULES) do
@@ -311,28 +324,28 @@ local function buildPage(body)
 
     -- Line 1, right of the label: thresholds.
     if rule == "value" then
-      local l = hint(row, "at least")
+      local l = hint(row, L["at least"])
       l:SetPoint("LEFT", row, "TOPLEFT", 160, -12)
       local box = newInput(row, 60)
       box:SetPoint("LEFT", l, "RIGHT", 6, 0)
       bindNumber(box, "value", "gold", 1)
       ui.inputs[#ui.inputs + 1] = box
-      local u = hint(row, "gold")
+      local u = hint(row, L["gold"])
       u:SetPoint("LEFT", box, "RIGHT", 6, 0)
     elseif rule == "multiple" then
-      local l = hint(row, "at least")
+      local l = hint(row, L["at least"])
       l:SetPoint("LEFT", row, "TOPLEFT", 160, -12)
       local box = newInput(row, 36)
       box:SetPoint("LEFT", l, "RIGHT", 6, 0)
       bindNumber(box, "multiple", "n", 1)
       ui.inputs[#ui.inputs + 1] = box
-      local l2 = hint(row, "x average, after")
+      local l2 = hint(row, L["x average, after"])
       l2:SetPoint("LEFT", box, "RIGHT", 6, 0)
       local box2 = newInput(row, 36)
       box2:SetPoint("LEFT", l2, "RIGHT", 6, 0)
       bindNumber(box2, "multiple", "minNodes", 1)
       ui.inputs[#ui.inputs + 1] = box2
-      local u = hint(row, "nodes")
+      local u = hint(row, L["nodes"])
       u:SetPoint("LEFT", box2, "RIGHT", 6, 0)
     end
 
@@ -343,13 +356,13 @@ local function buildPage(body)
     dd:SetPoint("TOPLEFT", row, "TOPLEFT", 20, -24)
     ui.dds[#ui.dds + 1] = dd
 
-    local flash = W.Toggle(row, "Flash",
+    local flash = W.Toggle(row, L["Flash"],
       function() return flashFor(rule) end,
       function(on) cfg()[rule].flash = on end)
     flash:SetPoint("LEFT", dd, "RIGHT", 12, 0)
     ui.toggles[#ui.toggles + 1] = flash
 
-    local test = W.RedButton(row, "Test", function() Alarms:Test(rule) end)
+    local test = W.RedButton(row, L["Test"], function() Alarms:Test(rule) end)
     test:SetSize(60, 20)
     test:SetPoint("LEFT", flash.label, "RIGHT", 16, 0)
   end
@@ -365,7 +378,7 @@ local function refreshPage(body)
   end
 end
 
-local PAGE = { id = "alarms", title = "Alarms", order = 60, build = buildPage, refresh = refreshPage }
+local PAGE = { id = "alarms", title = L["Alarms"], order = 60, build = buildPage, refresh = refreshPage }
 
 ---------------------------------------------------------------------------
 -- Lifecycle

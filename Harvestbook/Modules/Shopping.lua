@@ -1,4 +1,5 @@
 local ADDON, ns = ...
+local L = ns.L
 
 -- Shopping list module: materials you want to gather, with how many you have,
 -- the best zone for each (from the node log, see Logic/ShoppingEval) and an
@@ -41,7 +42,7 @@ local function list() return HB.db.global.shopping.list end
 
 local function mapName(mapID)
   local info = C_Map and C_Map.GetMapInfo and C_Map.GetMapInfo(mapID)
-  return info and info.name or ("Map " .. tostring(mapID))
+  return info and info.name or L["Map %s"]:format(tostring(mapID))
 end
 
 ---------------------------------------------------------------------------
@@ -72,7 +73,7 @@ end
 local function check()
   if doneSet then
     for _, row in ipairs(Eval.NewlyDone(countRows(), doneSet)) do
-      HB:Msg("Shopping list: %s done (%s/%s).", HB:ItemName(row.itemID),
+      HB:Msg(L["Shopping list: %s done (%s/%s)."], HB:ItemName(row.itemID),
         Format.Thousands(row.have), Format.Thousands(row.target))
     end
   end
@@ -126,20 +127,20 @@ end
 local function addItem(ui)
   local itemID = Eval.ParseItem(ui.item:GetText())
   if not itemID then
-    HB:Msg("Shift-click an item (or type its item ID) to add it.")
+    HB:Msg(L["Shift-click an item (or type its item ID) to add it."])
     return
   end
   if not itemExists(itemID) then
-    HB:Msg("There is no item with ID %d.", itemID)
+    HB:Msg(L["There is no item with ID %d."], itemID)
     return
   end
   local target = GoalEval.ParseTarget(ui.target:GetText(), false)
   if not target then
-    HB:Msg("Enter how many you need, as a whole number greater than zero.")
+    HB:Msg(L["Enter how many you need, as a whole number greater than zero."])
     return
   end
   if not Eval.Upsert(list(), itemID, target) then
-    HB:Msg("The shopping list holds up to %d items.", Eval.MAX_ENTRIES)
+    HB:Msg(L["The shopping list holds up to %d items."], Eval.MAX_ENTRIES)
     return
   end
   -- Adding or re-targeting is not gathering: no notice from this change.
@@ -168,7 +169,7 @@ local function clearAll()
 end
 
 StaticPopupDialogs["HARVESTBOOK_SHOPPING_CLEAR"] = {
-  text = "Clear your whole shopping list?",
+  text = L["Clear your whole shopping list?"],
   button1 = YES, button2 = CANCEL,
   OnAccept = function() HB:SafeCall("Shopping", clearAll) end,
   timeout = 0, whileDead = true, hideOnEscape = true, preferredIndex = 3,
@@ -210,10 +211,10 @@ end
 
 -- Columns + 4 px pad + 16 px scrollbar must be <= 440: 420.
 local COLUMNS = {
-  { key = "name", title = "Item", width = 180, align = "LEFT" },
-  { key = "have", title = "Have/Target", width = 80, align = "RIGHT" },
-  { key = "zone", title = "Best zone", width = 105, align = "LEFT" },
-  { key = "nodes", title = "Nodes", width = 55, align = "RIGHT" },
+  { key = "name", title = L["Item"], width = 180, align = "LEFT" },
+  { key = "have", title = L["Have/Target"], width = 80, align = "RIGHT" },
+  { key = "zone", title = L["Best zone"], width = 105, align = "LEFT" },
+  { key = "nodes", title = L["Nodes"], width = 55, align = "RIGHT" },
 }
 
 -- ItemQualityInfo remembers "no badge" for an item with no known quality, so
@@ -234,7 +235,7 @@ local function cell(row, key)
   elseif key == "zone" then
     return row.mapID and mapName(row.mapID) or (GREY .. DASH .. "|r")
   elseif key == "nodes" then
-    if row.done then return GREEN .. "Done|r" end
+    if row.done then return GREEN .. L["Done"] .. "|r" end
     return row.nodes and Format.Thousands(row.nodes) or (GREY .. DASH .. "|r")
   end
 end
@@ -280,15 +281,15 @@ local function buildPage(body)
 
   ui.item = newInput(body, 200)
   ui.item:SetPoint("TOPLEFT", body, "TOPLEFT", 6, -16) -- the box's border sits outside its frame
-  label("Item (Shift-click, or item ID)", ui.item)
+  label(L["Item (Shift-click, or item ID)"], ui.item)
   itemBox = ui.item
 
   ui.target = newInput(body, 70)
   ui.target:SetMaxLetters(14)
   ui.target:SetPoint("LEFT", ui.item, "RIGHT", 10, 0)
-  label("How many", ui.target)
+  label(L["How many"], ui.target)
 
-  ui.add = W.RedButton(body, "Add", function() HB:SafeCall("Shopping", addItem, ui) end)
+  ui.add = W.RedButton(body, L["Add"], function() HB:SafeCall("Shopping", addItem, ui) end)
   ui.add:SetPoint("LEFT", ui.target, "RIGHT", 10, 0)
 
   ui.note = body:CreateFontString(nil, "OVERLAY", "HarvestbookFontSmall")
@@ -298,13 +299,12 @@ local function buildPage(body)
   ui.note:SetJustifyH("LEFT")
   ui.note:SetJustifyV("BOTTOM")
   ui.note:SetTextColor(Theme:Color("grey"))
-  ui.note:SetText("Have counts this character and the warband bank, not your other characters. "
-    .. "Nodes is an estimate from your node log.")
+  ui.note:SetText(L["Have counts this character and the warband bank, not your other characters. Nodes is an estimate from your node log."])
 
-  ui.remove = W.RedButton(body, "Remove", function() HB:SafeCall("Shopping", removeSelected) end)
+  ui.remove = W.RedButton(body, L["Remove"], function() HB:SafeCall("Shopping", removeSelected) end)
   ui.remove:SetPoint("BOTTOMLEFT", ui.note, "TOPLEFT", 0, 4)
 
-  ui.clear = W.RedButton(body, "Clear all", function() StaticPopup_Show("HARVESTBOOK_SHOPPING_CLEAR") end)
+  ui.clear = W.RedButton(body, L["Clear all"], function() StaticPopup_Show("HARVESTBOOK_SHOPPING_CLEAR") end)
   ui.clear:SetPoint("LEFT", ui.remove, "RIGHT", 8, 0)
 
   ui.list = W.ColumnList(body, COLUMNS)
@@ -320,7 +320,7 @@ local function buildPage(body)
   ui.empty:SetPoint("RIGHT", body, "RIGHT", -4, 0)
   ui.empty:SetJustifyH("LEFT")
   ui.empty:SetTextColor(Theme:Color("grey"))
-  ui.empty:SetText("Your shopping list is empty. Add a material you want to gather and how many you need.")
+  ui.empty:SetText(L["Your shopping list is empty. Add a material you want to gather and how many you need."])
   ui.empty:Hide()
 end
 
@@ -328,7 +328,7 @@ end
 -- Lifecycle
 ---------------------------------------------------------------------------
 
-local PAGE = { id = "shopping", title = "Shopping", order = 37, build = buildPage, refresh = refreshPage }
+local PAGE = { id = "shopping", title = L["Shopping"], order = 37, build = buildPage, refresh = refreshPage }
 
 function Shopping:OnEnable()
   doneSet = nil
