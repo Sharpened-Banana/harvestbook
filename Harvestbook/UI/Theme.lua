@@ -48,6 +48,7 @@ Theme.ICONS = {
   nodelog = "Interface\\Icons\\INV_Misc_Book_09",
   bestspot = "Interface\\Icons\\INV_Misc_Map_01",
   routes = "Interface\\Icons\\Ability_Hunter_Pathfinding",
+  shopping = "Interface\\Icons\\INV_Misc_Bag_10",
   records = "Interface\\Icons\\INV_Misc_Trophy_03",
   gold = "Interface\\Icons\\INV_Misc_Coin_02",
   gear = "Interface\\Icons\\INV_Misc_Gear_01",

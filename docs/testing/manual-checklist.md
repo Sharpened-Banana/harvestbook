@@ -160,6 +160,29 @@ Every "Verify:" item below, by section (the original entries stay in their secti
 - [ ] Reset all data empties the page, even when choosing "Later" on the reload prompt, and `priceHistory` is `{}`
 - [ ] Page readable at 700x500: columns not clipped, note fits on two lines, list has several rows, money labels not overlapping the plot
 
+## Shopping
+- [ ] Shopping appears in the sidebar after Routes and in the Settings module toggles; the sidebar and the Settings page still fit at 700x500
+- [ ] Empty list: the page shows the empty text and the grey note; Remove and Clear all are disabled
+- [ ] Focus the item box and Shift-click an item in your bags: the link fills the box, with the Goals module on and off; enter a target, press Add: the row appears and the boxes clear
+- [ ] Type an item ID instead: added the same way, with icon and quality badge; a not-yet-loaded name fills in on its own
+- [ ] Bad input gets a chat message and adds nothing: empty item box, "abc", an item ID that does not exist, target empty, 0, -5, "1e5", "2.5", "250k"
+- [ ] Adding a listed item again changes its target, no second row; a 31st item is refused with a message, while changing a target on the full list still works
+- [ ] Have equals your bags + bank + reagent bank + warband bank; a stack only in the bank or warband bank is counted (bank closed too, after a /reload)
+- [ ] A Have value updates within a second of looting, banking, or a gather, with the page showing
+- [ ] Best zone: an item logged in two zones shows the higher average once each has 5+ gathers of its node; with fewer everywhere, the most-gathered zone; never gathered shows grey dashes
+- [ ] Nodes shows remaining / average rounded up (compare with Node Log's "Per node"); finished rows show a green Done and sort below unfinished rows, each group by name
+- [ ] Forget the best zone on the Node Log page: the zone column moves on or dashes out
+- [ ] Click a row: its name turns gold and Remove enables; Remove takes that row and disables again
+- [ ] Clear all asks first; Cancel keeps the list, Yes empties it
+- [ ] Notice: with the page closed, loot your way past a target: one chat line, once, within a second; more of the item prints nothing
+- [ ] Spend below the target and gather back past it: one more line
+- [ ] No notice for items already done at login or /reload (wait 10 s after it), for a target lowered to below Have, or for adding an item you already have enough of. A target raised above Have, then gathered past, does notify
+- [ ] The list is the same on a second character (same warband); that character's Have shows its own counts plus the warband bank
+- [ ] `/hb shopping` opens the page; with the module off it says so and opens nothing
+- [ ] Turning the module off removes the page and stops notices; on again, the list is still there and no notice fires for what was done meanwhile
+- [ ] Reset all data empties the page, even when choosing "Later" on the reload prompt
+- [ ] Page readable at 700x500: columns not clipped, note fits on two lines, list has several rows
+
 ## Alarms (Task 18)
 - [ ] Test button plays each sound and shows text
 - [ ] Value alarm fires on a high-value node; no repeat within 2 s

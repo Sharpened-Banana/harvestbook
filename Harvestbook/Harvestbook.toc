@@ -27,6 +27,7 @@ Logic\GoldLedger.lua
 Logic\RouteBuilder.lua
 Logic\GearCompare.lua
 Logic\PriceTrend.lua
+Logic\ShoppingEval.lua
 
 Core\Init.lua
 Core\Items.lua
@@ -46,6 +47,7 @@ Modules\MapPins.lua
 Modules\Records.lua
 Modules\BestSpot.lua
 Modules\Routes.lua
+Modules\Shopping.lua
 Modules\GearCompare.lua
 Modules\Trends.lua
 Modules\Goals.lua

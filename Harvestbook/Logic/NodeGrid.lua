@@ -129,6 +129,33 @@ function M.ItemsFor(zone, nodeID)
   return rows
 end
 
+-- How much of an item the zone gave, and how many gathers of the nodes that gave
+-- it (same attribution rule as Summarize). Gathers at spots where the item didn't
+-- drop still count, so a rare drop isn't rated by its lucky spots alone.
+-- Returns items, gathers.
+function M.ItemYield(zone, itemID)
+  local items, givers = 0, {}
+  for _, spot in pairs(zone) do
+    local n = spot.items and spot.items[itemID]
+    if n and n > 0 and (spot.gathers or 0) > 0 then
+      local dom = dominant(spot)
+      if dom then
+        items = items + n
+        givers[dom] = true
+      end
+    end
+  end
+  local gathers = 0
+  if items > 0 then
+    for _, spot in pairs(zone) do
+      for id, n in pairs(spot.nodeIDs or {}) do
+        if givers[id] then gathers = gathers + n end
+      end
+    end
+  end
+  return items, gathers
+end
+
 function M.ImportPoint(zone, x, y, kind)
   local key = resolveKey(zone, x, y, kind)
   if zone[key] then return nil end

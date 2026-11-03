@@ -20,6 +20,7 @@ HB.defaults = {
       Records = { enabled = true },
       BestSpot = { enabled = true },
       Routes = { enabled = true },
+      Shopping = { enabled = true },
       GearCompare = { enabled = true },
       Trends = { enabled = true },
       Goals = { enabled = true },
@@ -65,6 +66,7 @@ HB.defaults = {
     lifetimeByChar = {},
     gold = { total = 0, day = {}, daily = {}, weekly = {} },
     goals = { attempts = {} },
+    shopping = { list = {} },
     nodeNames = {},
   },
 }

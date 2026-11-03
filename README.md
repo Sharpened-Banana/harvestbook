@@ -13,6 +13,7 @@ Every module can be toggled in Settings. Disabling a module never deletes its da
 - **Map Pins** - world map pins for logged nodes, with gold/hr tooltips and fading for old pins; optional see-through minimap pins (off by default).
 - **Best Spot** - ranks zones and individual spots by gold/hr or other metrics; click a spot to set a waypoint.
 - **Routes** - builds a farming loop from your own node log for a zone, with numbered stops and dots on the world map and a "Next stop" waypoint button.
+- **Shopping** - a warband-wide list of materials you want to gather ("I need 200 of this"), with what you have, your best zone for each from the node log, and an estimate of the nodes left.
 - **Gear Comparison** - groups your sessions by the profession gear equipped when they started and compares gold/hr and nodes/hr, overall or within one zone.
 - **Trends** - records the Auctionator / TSM price of what you gather, day by day, with a 90-day chart and 7-day and 30-day changes per material.
 - **Records** - best gold/hr, longest session and most nodes, lifetime totals (per character or warband) and session history.
@@ -36,6 +37,7 @@ Copy the `Harvestbook/` folder into `World of Warcraft/_retail_/Interface/AddOns
 | `/hb companion` | Toggle the companion window |
 | `/hb config` | Open all options |
 | `/hb prices` | Refresh prices for the current session |
+| `/hb shopping` | Open the shopping list |
 | `/hb debug` | Toggle debug output (prints every gather payload) |
 | `/hb help` | List commands (any unrecognised command also shows it) |
 
