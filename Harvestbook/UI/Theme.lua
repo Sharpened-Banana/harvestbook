@@ -42,6 +42,10 @@ Theme.COLORS = {
 }
 
 Theme.FONTS = { title = "Fonts\\MORPHEUS.TTF", body = "Fonts\\FRIZQT__.TTF" }
+-- These two lack Cyrillic on some clients; the game's own font always covers its language.
+if GetLocale and GetLocale() == "ruRU" and STANDARD_TEXT_FONT then
+  Theme.FONTS.title, Theme.FONTS.body = STANDARD_TEXT_FONT, STANDARD_TEXT_FONT
+end
 
 Theme.ICONS = {
   session = "Interface\\Icons\\INV_Misc_PocketWatch_01",
