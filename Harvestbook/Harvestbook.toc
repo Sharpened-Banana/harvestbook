@@ -15,6 +15,12 @@ embeds.xml
 
 Locale\Locale.lua
 Locale\enUS.lua
+Locale\deDE.lua
+Locale\frFR.lua
+Locale\esES.lua
+Locale\ptBR.lua
+Locale\itIT.lua
+Locale\ruRU.lua
 
 Logic\Format.lua
 Logic\SessionMath.lua

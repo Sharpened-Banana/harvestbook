@@ -1,4 +1,11 @@
-local LOCALES = {}
+local LOCALES = {
+  { "deDE.lua", "deDE" },
+  { "frFR.lua", "frFR" },
+  { "esES.lua", "esES", aliases = { "esMX" } },
+  { "ptBR.lua", "ptBR" },
+  { "itIT.lua", "itIT" },
+  { "ruRU.lua", "ruRU" },
+}
 
 -- Runs an addon file with GetLocale stubbed (nil = the API is missing).
 local function loadLocale(file, locale)
