@@ -36,15 +36,19 @@ function M.ParseGUID(guid)
 end
 
 -- knownIDs = { [spellID] = kind }; nameOf(spellID) -> localized name or nil.
+-- Second return: complete = every name resolved (false: rebuild it later).
 function M.NewSpellMatcher(knownIDs, nameOf)
   local names = {}
+  local complete = true
   for id, kind in pairs(knownIDs) do
     local ok, name = pcall(nameOf, id)
     if ok and type(name) == "string" and name ~= "" then
       names[name] = kind
+    else
+      complete = false
     end
   end
-  return function(spellID, spellName)
+  local function match(spellID, spellName)
     local kind = spellID and knownIDs[spellID]
     if kind then return kind end
     if type(spellName) == "string" and spellName ~= "" then
@@ -52,6 +56,7 @@ function M.NewSpellMatcher(knownIDs, nameOf)
     end
     return nil
   end
+  return match, complete
 end
 
 local function escape(s)

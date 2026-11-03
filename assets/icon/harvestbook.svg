@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="72%">
+      <stop offset="0" stop-color="#2A5B50"/>
+      <stop offset="0.6" stop-color="#14302B"/>
+      <stop offset="1" stop-color="#0A1714"/>
+    </radialGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFE680"/>
+      <stop offset="0.45" stop-color="#C9962B"/>
+      <stop offset="1" stop-color="#6B4A12"/>
+    </linearGradient>
+    <linearGradient id="pageL" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#F4EAC9"/>
+      <stop offset="0.75" stop-color="#E3D3A6"/>
+      <stop offset="1" stop-color="#A8935F"/>
+    </linearGradient>
+    <linearGradient id="pageR" x1="1" y1="0" x2="0" y2="0">
+      <stop offset="0" stop-color="#F4EAC9"/>
+      <stop offset="0.75" stop-color="#E3D3A6"/>
+      <stop offset="1" stop-color="#A8935F"/>
+    </linearGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8CF06A"/>
+      <stop offset="1" stop-color="#1F8A3B"/>
+    </linearGradient>
+    <linearGradient id="nug" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFF0A0"/>
+      <stop offset="1" stop-color="#D08A12"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="10" y="10" width="492" height="492" rx="58" fill="url(#rim)"/>
+  <rect x="26" y="26" width="460" height="460" rx="46" fill="url(#bg)"/>
+
+  <!-- leather cover -->
+  <path d="M60 352 C130 322 205 330 256 362 C307 330 382 322 452 352 L452 418 C382 392 307 398 256 430 C205 398 130 392 60 418 Z" fill="#6E1414" stroke="#2C0606" stroke-width="6" stroke-linejoin="round"/>
+  <!-- pages -->
+  <path d="M76 322 C140 294 208 302 256 340 L256 412 C208 378 140 372 76 396 Z" fill="url(#pageL)" stroke="#6E5E3C" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M436 322 C372 294 304 302 256 340 L256 412 C304 378 372 372 436 396 Z" fill="url(#pageR)" stroke="#6E5E3C" stroke-width="5" stroke-linejoin="round"/>
+  <!-- text lines -->
+  <g fill="none" stroke="#8C7A50" stroke-width="7" stroke-linecap="round">
+    <path d="M104 342 C146 328 186 332 226 352"/>
+    <path d="M104 366 C146 352 186 356 226 376"/>
+    <path d="M408 342 C366 328 326 332 286 352"/>
+    <path d="M408 366 C366 352 326 356 286 376"/>
+  </g>
+
+  <!-- sprig -->
+  <path d="M256 348 C254 280 258 200 256 112" fill="none" stroke="#1B6B30" stroke-width="13" stroke-linecap="round"/>
+  <g stroke="#0F4A20" stroke-width="5" stroke-linejoin="round">
+    <path d="M256 128 C222 104 222 64 256 34 C290 64 290 104 256 128 Z" fill="url(#leaf)"/>
+    <path d="M254 214 C222 214 166 196 136 134 C206 126 248 160 254 214 Z" fill="url(#leaf)"/>
+    <path d="M258 214 C290 214 346 196 376 134 C306 126 264 160 258 214 Z" fill="url(#leaf)"/>
+    <path d="M254 306 C222 306 176 288 150 234 C212 228 248 256 254 306 Z" fill="url(#leaf)"/>
+    <path d="M258 306 C290 306 336 288 362 234 C300 228 264 256 258 306 Z" fill="url(#leaf)"/>
+  </g>
+  <!-- leaf veins -->
+  <g fill="none" stroke="#D7FFB8" stroke-opacity="0.75" stroke-width="4" stroke-linecap="round">
+    <path d="M256 112 L256 56"/>
+    <path d="M240 200 C214 180 186 162 160 146"/>
+    <path d="M272 200 C298 180 326 162 352 146"/>
+    <path d="M240 292 C218 274 194 258 172 246"/>
+    <path d="M272 292 C294 274 318 258 340 246"/>
+  </g>
+</svg>

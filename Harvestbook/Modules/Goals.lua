@@ -42,10 +42,7 @@ local function pg() return HB.db.profile.goals end
 local function ag() return HB.db.global.goals.attempts end
 local function money(copper) return Format.Money(copper, HB.db.profile.goldStyle) end
 
-local function itemName(itemID)
-  local name = C_Item and C_Item.GetItemNameByID and C_Item.GetItemNameByID(itemID)
-  return name or ("Item " .. tostring(itemID))
-end
+local function itemName(itemID) return HB:ItemName(itemID) end
 
 local function itemIcon(itemID)
   return C_Item and C_Item.GetItemIconByID and C_Item.GetItemIconByID(itemID) or nil
@@ -200,7 +197,7 @@ local function newInput(parent, width, numeric)
   box:SetSize(width, 20)
   box:SetAutoFocus(false)
   box:SetTextInsets(2, 2, 0, 0)
-  if numeric then box:SetMaxLetters(9) end
+  if numeric then box:SetMaxLetters(14) end
   box:SetScript("OnEscapePressed", box.ClearFocus)
   box:SetScript("OnEnterPressed", box.ClearFocus)
   boxes[box] = true
@@ -343,8 +340,12 @@ local function buildPage(body)
   ui.target:SetPoint("LEFT", ui.item, "RIGHT", 10, 0)
 
   ui.add = W.RedButton(body, "Add goal", function()
-    local target = tonumber(ui.target:GetText())
-    if not target or target <= 0 then say("Enter a target greater than zero.") return end
+    local target = GoalEval.ParseTarget(ui.target:GetText(), addType == "gold")
+    if not target then
+      say(addType == "gold" and "Enter a whole number of gold, like 50000, 250k or 2.5m."
+        or "Enter a whole number greater than zero.")
+      return
+    end
     local itemID
     if addType == "materials" then
       local text = ui.item:GetText()

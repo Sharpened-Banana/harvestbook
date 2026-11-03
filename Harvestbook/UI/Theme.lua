@@ -47,6 +47,7 @@ Theme.ICONS = {
   nodelog = "Interface\\Icons\\INV_Misc_Book_09",
   bestspot = "Interface\\Icons\\INV_Misc_Map_01",
   records = "Interface\\Icons\\INV_Misc_Trophy_03",
+  gold = "Interface\\Icons\\INV_Misc_Coin_02",
   goals = "Interface\\Icons\\INV_Misc_Note_01",
   alarms = "Interface\\Icons\\INV_Misc_Bell_01",
   window = "Interface\\Icons\\INV_Misc_Spyglass_03",

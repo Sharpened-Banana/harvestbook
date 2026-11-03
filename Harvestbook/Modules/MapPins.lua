@@ -49,10 +49,7 @@ local function nodeName(id)
   return HB.db.global.nodeNames[id] or ("Node " .. tostring(id))
 end
 
-local function itemName(itemID)
-  local name = C_Item and C_Item.GetItemNameByID and C_Item.GetItemNameByID(itemID)
-  return name or ("Item " .. tostring(itemID))
-end
+local function itemName(itemID) return HB:ItemName(itemID) end
 
 -- Most-gathered nodeID; ties go to the lowest id.
 local function dominantNode(spot)

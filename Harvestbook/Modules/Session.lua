@@ -46,15 +46,7 @@ end
 -- Item helpers
 ---------------------------------------------------------------------------
 
-local function itemName(itemID, link)
-  local name = C_Item and C_Item.GetItemNameByID and C_Item.GetItemNameByID(itemID)
-  if not name and link then
-    -- Reagent links embed the quality atlas inside the brackets.
-    name = link:match("%[(.-)%]")
-    if name then name = name:gsub("|A.-|a", ""):gsub("%s+$", "") end
-  end
-  return name or ("Item " .. tostring(itemID))
-end
+local function itemName(itemID, link) return HB:ItemName(itemID, link) end
 
 local function itemIcon(itemID)
   return C_Item and C_Item.GetItemIconByID and C_Item.GetItemIconByID(itemID) or nil
@@ -172,7 +164,10 @@ end
 
 local function save()
   local s = cur()
-  if s then SessionMath.Checkpoint(s, time()) end
+  if s then
+    SessionMath.Checkpoint(s, time())
+    s.savedAt = time()
+  end
 end
 
 local function clearAuto(s)
@@ -307,10 +302,20 @@ checkIdle = function()
   return true
 end
 
--- First load after logging in: a session left over from the last login ends
--- at its last gather and goes to history (a /reload keeps it running).
+-- First load after logging in: back within RESUME_WINDOW (a disconnect or a
+-- quick relog) the session carries on; otherwise it ends at its last gather and
+-- goes to history. A /reload never comes here.
+local RESUME_WINDOW = 900
+local savedAtLoad -- s.savedAt as loaded; saves during OnEnable overwrite it
+
 local function closeLeftover()
-  if not cur() or profile().session.keepOnLogout then return end
+  local s = cur()
+  if not s then return end
+  if profile().session.keepOnLogout then return end
+  if SessionMath.ShouldResume(savedAtLoad, time(), RESUME_WINDOW) then
+    HB:Msg("welcome back, your session is still running.")
+    return
+  end
   if finish(true) then HB:Msg("your session from the last login was saved to history.") end
 end
 
@@ -828,6 +833,7 @@ end
 
 function Session:OnEnable()
   local s = cur()
+  savedAtLoad = s and s.savedAt
   if s then
     if s.state == "stopped" then
       archive(s)

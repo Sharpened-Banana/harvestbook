@@ -8,18 +8,26 @@ local ADDON, ns = ...
 -- "bestGph", "longest", "mostNodes"; HB_RECORDS_CHANGED()
 -- after a session is deleted (BestSpot listens to it).
 --
--- Records are NOT recomputed when a session is deleted: they are personal
--- bests and stay even if the session that set them is gone.
+-- Deleting the session that holds a record recomputes that record from the
+-- remaining history; other records are left alone (their session may have aged
+-- out of the 500-session history).
+--
+-- The Gold page: an all-time total, gold per day / daily reset / weekly reset
+-- and the all-time goal (global.gold, Logic/GoldLedger.lua). A gather adds its
+-- value at the prices of that moment, on every character. HB_GOAL_REACHED fires
+-- when a gather crosses the goal.
 
 local HB = ns.HB
 local SessionMath = ns.SessionMath
+local GoldLedger = ns.GoldLedger
+local GoalEval = ns.GoalEval
 local Format = ns.Format
 local Theme = ns.Theme
 local W = ns.Widgets
 
 local Records = HB:NewModule("Records", "AceEvent-3.0")
 
-local MIN_GPH_SECONDS = 600
+local RECORD_NAMES = { "bestGph", "longest", "mostNodes" }
 local DASH = "\226\128\148"
 
 local charKey
@@ -29,10 +37,7 @@ local detailID               -- session id shown in the detail view
 local function g() return HB.db.global end
 local function money(copper) return Format.Money(copper, HB.db.profile.goldStyle) end
 
-local function itemName(itemID)
-  local name = C_Item and C_Item.GetItemNameByID and C_Item.GetItemNameByID(itemID)
-  return name or ("Item " .. tostring(itemID))
-end
+local function itemName(itemID) return HB:ItemName(itemID) end
 
 local function itemIcon(itemID)
   return C_Item and C_Item.GetItemIconByID and C_Item.GetItemIconByID(itemID) or nil
@@ -87,6 +92,13 @@ function Records:DeleteSession(id)
   for i, s in ipairs(list) do
     if s.id == id then
       table.remove(list, i)
+      local recs, fn = g().records, HB.Pricing:Fn()
+      for _, name in ipairs(RECORD_NAMES) do
+        if recs[name] and recs[name].sessionID == id then
+          local value, sessionID = SessionMath.BestRecord(name, list, fn)
+          recs[name] = value and { value = value, sessionID = sessionID } or nil
+        end
+      end
       HB:SendMessage("HB_RECORDS_CHANGED")
       return true
     end
@@ -98,8 +110,53 @@ end
 -- Event handlers
 ---------------------------------------------------------------------------
 
+-- The ledger keys for a moment in time. Resets come from the server clock; a
+-- client without the call just skips that bucket.
+local function goldKeys(t)
+  local keys = { day = date("%Y-%m-%d", t) }
+  local api, now = C_DateAndTime, time()
+  if api and api.GetSecondsUntilDailyReset then
+    local secs = api.GetSecondsUntilDailyReset()
+    if type(secs) == "number" then
+      keys.daily = GoldLedger.ResetKey(t, now + secs, GoldLedger.PERIOD_SECONDS.daily)
+    end
+  end
+  if api and api.GetSecondsUntilWeeklyReset then
+    local secs = api.GetSecondsUntilWeeklyReset()
+    if type(secs) == "number" then
+      keys.weekly = GoldLedger.ResetKey(t, now + secs, GoldLedger.PERIOD_SECONDS.weekly)
+    end
+  end
+  return keys
+end
+
+local function addGold(gather)
+  local fn, copper = HB.Pricing:Fn(), 0
+  for _, it in ipairs(gather.items or {}) do
+    if it.itemID then copper = copper + (fn(it.itemID, it.quality, it.link) or 0) * (it.count or 0) end
+  end
+  local ledger = g().gold
+  local before = ledger.total or 0
+  GoldLedger.Add(ledger, copper, goldKeys(time()))
+  if GoldLedger.GoalCrossed(before, ledger.total or 0, ledger.goal) then
+    HB:SendMessage("HB_GOAL_REACHED", { id = "alltime", type = "gold", target = ledger.goal })
+  end
+end
+
+-- First run with the Gold page: count the sessions already in history.
+local function backfillGold()
+  local ledger = g().gold
+  if ledger.backfilled then return end
+  ledger.backfilled = true
+  local fn = HB.Pricing:Fn()
+  local function value(s) return SessionMath.Value(s, fn) end
+  GoldLedger.Backfill(ledger, g().sessions, value, goldKeys)
+  if HB.char.current then GoldLedger.Backfill(ledger, { HB.char.current }, value, goldKeys) end
+end
+
 function Records:OnGather(gather)
   if type(gather) ~= "table" then return end
+  addGold(gather)
   local life = g().lifetime
   local byChar = g().lifetimeByChar
   local mine = byChar[charKey]
@@ -119,15 +176,10 @@ end
 function Records:OnSession(state, s)
   if state ~= "stopped" or not s then return end
   local priceFn = HB.Pricing:Fn()
-  local active = s.activeSeconds or 0
-  if active >= MIN_GPH_SECONDS then
-    local gph = SessionMath.GoldPerHour(s, 0, priceFn)
-    if gph then setRecord("bestGph", gph, { sessionID = s.id }) end
+  for _, name in ipairs(RECORD_NAMES) do
+    local value = SessionMath.RecordValue(name, s, priceFn)
+    if value then setRecord(name, value, { sessionID = s.id }) end
   end
-  setRecord("longest", active, { sessionID = s.id })
-  local nodes = 0
-  for _, n in pairs(s.nodes or {}) do nodes = nodes + n end
-  setRecord("mostNodes", nodes, { sessionID = s.id })
 end
 
 ---------------------------------------------------------------------------
@@ -360,9 +412,164 @@ StaticPopupDialogs["HARVESTBOOK_DELETE_SESSION"] = {
 -- Lifecycle
 ---------------------------------------------------------------------------
 
-local PAGE = { id = "records", title = "Records", order = 40, build = buildPage, refresh = refreshPage }
+---------------------------------------------------------------------------
+-- Gold page
+---------------------------------------------------------------------------
 
-local function onChanged() HB.UI:RefreshPage("records") end
+local PERIOD_OPTIONS = {
+  { value = "day", text = "Per day" },
+  { value = "daily", text = "Per daily reset" },
+  { value = "weekly", text = "Per weekly reset" },
+}
+local PERIOD_WORD = { day = "day", daily = "reset", weekly = "week" }
+
+local GOLD_COLUMNS = {
+  { key = "period", title = "Period", width = 200, align = "LEFT" },
+  { key = "gold", title = "Gold", width = 150, align = "RIGHT" },
+}
+
+local function goldPeriod()
+  local p = HB.db.profile.goldPeriod
+  return PERIOD_WORD[p] and p or "day"
+end
+
+-- Reset keys are the epoch a period ends at; rows show the date it began.
+local function periodLabel(period, key)
+  if period == "day" then return key end
+  local start = date("%Y-%m-%d", key - GoldLedger.PERIOD_SECONDS[period])
+  return period == "weekly" and ("Week of " .. start) or start
+end
+
+local function refreshGold(body)
+  local ui = body.gold
+  if not ui then return end
+  local ledger, period = g().gold, goldPeriod()
+  local total, goal = ledger.total or 0, ledger.goal
+
+  ui.total:SetText(money(total))
+  if goal then
+    local pct = math.min(100, total / goal * 100)
+    ui.bar:SetProgress(total, goal, string.format("Goal: %.1f%%", pct), money)
+    ui.bar:Show()
+    ui.noGoal:Hide()
+  else
+    ui.bar:Hide()
+    ui.noGoal:Show()
+  end
+  ui.clear:SetEnabled(goal ~= nil)
+
+  local sum = GoldLedger.Summary(ledger[period], goldKeys(time())[period])
+  local word = PERIOD_WORD[period]
+  ui.lines[1].label:SetText("This " .. word)
+  ui.lines[1].value:SetText(money(sum.current))
+  ui.lines[2].label:SetText("Average per active " .. word)
+  ui.lines[2].value:SetText(sum.periods > 0 and money(sum.average) or DASH)
+  ui.lines[3].label:SetText("Best " .. word)
+  ui.lines[3].value:SetText(sum.periods > 0 and money(sum.best) or DASH)
+  ui.period:Refresh()
+  ui.list:SetRows(GoldLedger.Rows(ledger[period]), function(row, key)
+    if key == "period" then return periodLabel(period, row.key) end
+    return money(row.copper)
+  end)
+end
+
+local function buildGold(body)
+  local ui = {}
+  body.gold = ui
+
+  local function line(y, width)
+    local label = body:CreateFontString(nil, "OVERLAY", "HarvestbookFontBody")
+    label:SetPoint("TOPLEFT", body, "TOPLEFT", 4, y)
+    label:SetWidth(width)
+    label:SetJustifyH("LEFT")
+    label:SetTextColor(Theme:Color("gold"))
+    local value = body:CreateFontString(nil, "OVERLAY", "HarvestbookFontBody")
+    value:SetPoint("LEFT", label, "RIGHT", 8, 0)
+    value:SetPoint("RIGHT", body, "RIGHT", 0, 0)
+    value:SetJustifyH("LEFT")
+    value:SetWordWrap(false)
+    value:SetTextColor(1, 1, 1)
+    return label, value
+  end
+
+  local totalLabel
+  totalLabel, ui.total = line(0, 190)
+  totalLabel:SetText("All-time gold earned")
+
+  ui.bar = W.ProgressBar(body)
+  ui.bar:SetPoint("TOPLEFT", body, "TOPLEFT", 0, -22)
+  ui.bar:SetPoint("TOPRIGHT", body, "TOPRIGHT", 0, -22)
+  ui.noGoal = body:CreateFontString(nil, "OVERLAY", "HarvestbookFontSmall")
+  ui.noGoal:SetPoint("TOPLEFT", body, "TOPLEFT", 4, -25)
+  ui.noGoal:SetText("No goal set. Try 5m for 5 million gold.")
+  ui.noGoal:SetTextColor(Theme:Color("grey"))
+
+  local goalLabel = body:CreateFontString(nil, "OVERLAY", "HarvestbookFontBody")
+  goalLabel:SetPoint("TOPLEFT", body, "TOPLEFT", 4, -50)
+  goalLabel:SetText("Gold goal")
+  goalLabel:SetTextColor(Theme:Color("gold"))
+
+  local input = CreateFrame("EditBox", nil, body, "InputBoxTemplate")
+  input:SetSize(110, 20)
+  input:SetAutoFocus(false)
+  input:SetMaxLetters(16)
+  input:SetTextInsets(2, 2, 0, 0)
+  input:SetPoint("LEFT", goalLabel, "RIGHT", 12, 0)
+  input:SetScript("OnEscapePressed", input.ClearFocus)
+
+  local function setGoal()
+    local target = GoalEval.ParseTarget(input:GetText(), true)
+    if not target then
+      HB:Msg("enter a whole number of gold, like 5000000, 250k or 5m.")
+      return
+    end
+    g().gold.goal = target * 10000
+    input:SetText("")
+    input:ClearFocus()
+    refreshGold(body)
+  end
+  input:SetScript("OnEnterPressed", setGoal)
+
+  ui.set = W.RedButton(body, "Set goal", setGoal)
+  ui.set:SetPoint("LEFT", input, "RIGHT", 8, 0)
+  ui.clear = W.RedButton(body, "Clear", function()
+    g().gold.goal = nil
+    refreshGold(body)
+  end)
+  ui.clear:SetPoint("LEFT", ui.set, "RIGHT", 6, 0)
+
+  ui.period = W.Dropdown(body, 160, PERIOD_OPTIONS, goldPeriod, function(v)
+    HB.db.profile.goldPeriod = v
+    refreshGold(body)
+  end)
+  ui.period:SetPoint("TOPLEFT", body, "TOPLEFT", 0, -78)
+
+  ui.lines = {}
+  for i = 1, 3 do
+    local label, value = line(-108 - (i - 1) * 16, 190)
+    ui.lines[i] = { label = label, value = value }
+  end
+
+  ui.list = W.ColumnList(body, GOLD_COLUMNS)
+  ui.list:SetPoint("TOPLEFT", body, "TOPLEFT", 0, -164)
+  ui.list:SetPoint("BOTTOMRIGHT", body, "BOTTOMRIGHT", 0, 20)
+
+  local note = body:CreateFontString(nil, "OVERLAY", "HarvestbookFontSmall")
+  note:SetPoint("BOTTOMLEFT", body, "BOTTOMLEFT", 4, 2)
+  note:SetPoint("BOTTOMRIGHT", body, "BOTTOMRIGHT", 0, 2)
+  note:SetJustifyH("LEFT")
+  note:SetWordWrap(false)
+  note:SetText("Estimated value of what you gathered on all characters, at the price when gathered.")
+  note:SetTextColor(Theme:Color("grey"))
+end
+
+local PAGE = { id = "records", title = "Records", order = 40, build = buildPage, refresh = refreshPage }
+local GOLD_PAGE = { id = "gold", title = "Gold", order = 45, build = buildGold, refresh = refreshGold }
+
+local function onChanged()
+  HB.UI:RefreshPage("records")
+  HB.UI:RefreshPage("gold")
+end
 
 function Records:OnEnable()
   charKey = UnitName("player") .. "-" .. GetRealmName()
@@ -381,11 +588,15 @@ function Records:OnEnable()
   end)
   HB:Listen(self, "HB_RECORDS_CHANGED", onChanged)
   HB:Listen(self, "HB_PRICES_UPDATED", onChanged)
+  backfillGold()
   PAGE.icon = Theme.ICONS and Theme.ICONS.records
   HB.UI:RegisterPage(PAGE)
+  GOLD_PAGE.icon = Theme.ICONS and Theme.ICONS.gold
+  HB.UI:RegisterPage(GOLD_PAGE)
 end
 
 function Records:OnDisable()
   self:UnregisterAllMessages()
   HB.UI:UnregisterPage("records")
+  HB.UI:UnregisterPage("gold")
 end

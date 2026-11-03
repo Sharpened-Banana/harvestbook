@@ -42,9 +42,11 @@ local function debugOn()
   return HB.db and HB.db.profile.debug
 end
 
+-- Spell names may not be loaded at the first cast: rebuild until all resolve.
+local matcherComplete = false
 local function getMatcher()
-  if not matcher then
-    matcher = GatherParse.NewSpellMatcher(GatherParse.KNOWN_SPELLS, C_Spell.GetSpellName)
+  if not matcherComplete then
+    matcher, matcherComplete = GatherParse.NewSpellMatcher(GatherParse.KNOWN_SPELLS, C_Spell.GetSpellName)
   end
   return matcher
 end
@@ -388,6 +390,14 @@ local function fireBonus(link, count)
   HB:SendMessage("HB_BONUS_LOOT", payload)
 end
 
+function Gather:PLAYER_ENTERING_WORLD()
+  if matcherComplete then return end
+  if C_Spell.RequestLoadSpellData then
+    for spellID in pairs(GatherParse.KNOWN_SPELLS) do pcall(C_Spell.RequestLoadSpellData, spellID) end
+  end
+  getMatcher()
+end
+
 function Gather:CHAT_MSG_LOOT(event, text)
   if secret(text) or type(text) ~= "string" then return end
   local link, count = parseLootLine(text, getChatPatterns())
@@ -405,7 +415,7 @@ end
 local EVENTS = {
   "UNIT_SPELLCAST_SENT", "UNIT_SPELLCAST_SUCCEEDED",
   "UNIT_SPELLCAST_FAILED", "UNIT_SPELLCAST_INTERRUPTED",
-  "LOOT_READY", "LOOT_CLOSED", "CHAT_MSG_LOOT",
+  "LOOT_READY", "LOOT_CLOSED", "CHAT_MSG_LOOT", "PLAYER_ENTERING_WORLD",
 }
 
 for _, event in ipairs(EVENTS) do

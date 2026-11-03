@@ -362,7 +362,7 @@ HB.options = {
               set = function(_, v) HB.db.profile.session.idleMinutes = v end,
             },
             keepOnLogout = sessionToggle(1.3, "Keep the session across logouts",
-              "Off: a session still open when you log out is saved to history at your next login. /reload never ends a session.", "keepOnLogout"),
+              "Off: a session still open when you log out is saved to history at your next login, unless you are back within 15 minutes (a disconnect or a quick relog). /reload never ends a session.", "keepOnLogout"),
             instance = sessionToggle(2, "Pause in instances", nil, "pause", "instance"),
             mail = sessionToggle(3, "Pause at the mailbox", nil, "pause", "mail"),
             ah = sessionToggle(4, "Pause at the auction house", nil, "pause", "ah"),

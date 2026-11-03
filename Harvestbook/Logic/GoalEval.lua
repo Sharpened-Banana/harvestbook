@@ -21,6 +21,22 @@ function M.Progress(goal, session, now, priceFn)
   return current, goal.target, current >= goal.target
 end
 
+-- Strict number entry for goals: "5000", "5,000,000", "250k", "2.5m". Rejects
+-- "1e5", "0x10", and anything else tonumber would quietly accept. Returns a
+-- positive whole number or nil. allowSuffix = false rejects k / m and decimals.
+function M.ParseTarget(text, allowSuffix)
+  if type(text) ~= "string" then return nil end
+  text = text:gsub("[%s,]", ""):lower()
+  local digits, suffix = text:match("^([%d%.]+)([km]?)$")
+  if not digits or (suffix ~= "" and allowSuffix == false) then return nil end
+  if not (digits:match("^%d+$") or (digits:match("^%d+%.%d+$") and suffix ~= "")) then return nil end
+  local n = tonumber(digits)
+  if suffix == "k" then n = n * 1000 elseif suffix == "m" then n = n * 1000000 end
+  n = math.floor(n + 0.5)
+  if n < 1 or n > 999999999999 then return nil end
+  return n
+end
+
 function M.NewlyReached(goals, session, now, priceFn, reached)
   local out = {}
   for _, goal in ipairs(goals) do

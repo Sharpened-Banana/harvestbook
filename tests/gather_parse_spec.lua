@@ -76,4 +76,15 @@ describe("GatherParse", function()
     assert.is_false(GP.IsBonusLoot(12345, 1100, 1000))  -- not a bonus item
     assert.is_false(GP.IsBonusLoot(nil, 1100, 1000))
   end)
+
+  it("NewSpellMatcher reports whether every name resolved", function()
+    local _, complete = GP.NewSpellMatcher({ [1] = "herb" }, function() return "Herb" end)
+    assert.is_true(complete)
+    local m, incomplete = GP.NewSpellMatcher({ [1] = "herb", [2] = "ore" }, function(id)
+      return id == 1 and "Herb" or nil
+    end)
+    assert.is_false(incomplete)
+    assert.are.equal("herb", m(1))
+    assert.are.equal("herb", m(99, "Herb"))
+  end)
 end)

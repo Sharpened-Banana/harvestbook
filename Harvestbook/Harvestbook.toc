@@ -6,7 +6,7 @@
 ## X-Curse-Project-ID: 1780708
 ## Version: 1.0.0
 ## Category: Professions
-## IconTexture: Interface\Icons\Trade_Herbalism
+## IconTexture: Interface\AddOns\Harvestbook\Media\Icon
 ## SavedVariables: HarvestbookDB
 ## SavedVariablesPerCharacter: HarvestbookCharDB
 ## AddonCompartmentFunc: Harvestbook_OnAddonCompartmentClick
@@ -23,8 +23,10 @@ Logic\AlarmEval.lua
 Logic\Migrate.lua
 Logic\GatherParse.lua
 Logic\Base64.lua
+Logic\GoldLedger.lua
 
 Core\Init.lua
+Core\Items.lua
 Core\DB.lua
 Core\Pricing.lua
 Core\Gather.lua

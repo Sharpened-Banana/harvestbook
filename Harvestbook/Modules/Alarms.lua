@@ -43,15 +43,7 @@ local function currentSession()
   return s and s.GetCurrent and s:GetCurrent() or nil
 end
 
-local function itemName(itemID, link)
-  local name = C_Item and C_Item.GetItemNameByID and C_Item.GetItemNameByID(itemID)
-  if name then return name end
-  if link then
-    local n = link:match("%[(.-)%]")
-    if n then return n end
-  end
-  return "Item " .. tostring(itemID)
-end
+local function itemName(itemID, link) return HB:ItemName(itemID, link) end
 
 ---------------------------------------------------------------------------
 -- Output: sound, text, flash

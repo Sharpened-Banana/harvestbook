@@ -432,6 +432,10 @@ function UI:RefreshPage(id)
   UI._Throttle(p.throttle, function() runRefresh(p) end)
 end
 
+function UI:RefreshAllPages()
+  for id in pairs(pages) do self:RefreshPage(id) end
+end
+
 function UI:Toggle()
   ensureBox()
   if box:IsShown() then box:Hide() else box:Show() end

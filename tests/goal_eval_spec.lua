@@ -77,4 +77,24 @@ describe("GoalEval", function()
     assert.are.equal(0, a[5].attempts)
     assert.are.equal(0, a[5].found)
   end)
+
+  it("ParseTarget accepts plain, grouped and suffixed amounts", function()
+    assert.are.equal(5000, G.ParseTarget("5000"))
+    assert.are.equal(5000000, G.ParseTarget("5,000,000"))
+    assert.are.equal(250000, G.ParseTarget(" 250k "))
+    assert.are.equal(5000000, G.ParseTarget("5M"))
+    assert.are.equal(2500000, G.ParseTarget("2.5m"))
+  end)
+
+  it("ParseTarget rejects what tonumber would quietly accept", function()
+    for _, bad in ipairs({ "1e5", "0x10", "0.5", "-5", "", "abc", "1.2.3m", "0", "5mk" }) do
+      assert.is_nil(G.ParseTarget(bad))
+    end
+    assert.is_nil(G.ParseTarget(nil))
+  end)
+
+  it("ParseTarget without suffixes refuses k and m", function()
+    assert.is_nil(G.ParseTarget("5k", false))
+    assert.are.equal(30, G.ParseTarget("30", false))
+  end)
 end)

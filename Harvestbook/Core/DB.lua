@@ -46,6 +46,7 @@ HB.defaults = {
     minimap = { hide = false },
     bestspot = { scope = "zones", metric = "gph" },
     goldStyle = "auto",
+    goldPeriod = "day", -- "day" | "daily" | "weekly" (Gold page)
     debug = false,
   },
   -- schemaVersion is deliberately absent: Migrate must see it unset on a fresh DB.
@@ -57,6 +58,7 @@ HB.defaults = {
     priceOverrides = {},
     lifetime = {},
     lifetimeByChar = {},
+    gold = { total = 0, day = {}, daily = {}, weekly = {} },
     goals = { attempts = {} },
     nodeNames = {},
   },

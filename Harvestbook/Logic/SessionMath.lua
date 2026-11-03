@@ -87,6 +87,39 @@ function M.ActiveSeconds(s, now)
   return a
 end
 
+-- savedAt within window seconds of now: the player is back from a disconnect.
+function M.ShouldResume(savedAt, now, window)
+  if type(savedAt) ~= "number" then return false end
+  local gap = now - savedAt
+  return gap >= 0 and gap <= window
+end
+
+-- A session's value for one personal record, or nil when it doesn't qualify.
+M.RECORD_MIN_GPH_SECONDS = 600
+function M.RecordValue(name, s, priceFn)
+  if name == "bestGph" then
+    if (s.activeSeconds or 0) < M.RECORD_MIN_GPH_SECONDS then return nil end
+    return M.GoldPerHour(s, 0, priceFn)
+  elseif name == "longest" then
+    return s.activeSeconds or 0
+  elseif name == "mostNodes" then
+    local nodes = 0
+    for _, n in pairs(s.nodes or {}) do nodes = nodes + n end
+    return nodes
+  end
+  return nil
+end
+
+-- The best of sessions for one record: value, sessionID (nil when none has one).
+function M.BestRecord(name, sessions, priceFn)
+  local best, id
+  for _, s in ipairs(sessions or {}) do
+    local v = M.RecordValue(name, s, priceFn)
+    if v and v > 0 and (not best or v > best) then best, id = v, s.id end
+  end
+  return best, id
+end
+
 -- Active (unpaused, online) seconds since the last gather, start or resume.
 function M.IdleSeconds(s, now)
   local a = M.ActiveSeconds(s, now)

@@ -48,10 +48,7 @@ local function mapName(mapID)
   return info and info.name or ("Map " .. tostring(mapID))
 end
 
-local function itemName(itemID)
-  local name = C_Item and C_Item.GetItemNameByID and C_Item.GetItemNameByID(itemID)
-  return name or ("Item " .. tostring(itemID))
-end
+local function itemName(itemID) return HB:ItemName(itemID) end
 
 local function itemIcon(itemID)
   return C_Item and C_Item.GetItemIconByID and C_Item.GetItemIconByID(itemID) or nil
