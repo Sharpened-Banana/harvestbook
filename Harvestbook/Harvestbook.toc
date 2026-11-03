@@ -28,6 +28,7 @@ Logic\RouteBuilder.lua
 Logic\GearCompare.lua
 Logic\PriceTrend.lua
 Logic\ShoppingEval.lua
+Logic\Export.lua
 
 Core\Init.lua
 Core\Items.lua

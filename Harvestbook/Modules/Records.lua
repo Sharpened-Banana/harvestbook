@@ -16,11 +16,15 @@ local ADDON, ns = ...
 -- and the all-time goal (global.gold, Logic/GoldLedger.lua). A gather adds its
 -- value at the prices of that moment, on every character. HB_GOAL_REACHED fires
 -- when a gather crosses the goal.
+--
+-- CSV export: a copy box over Logic/Export.lua, opened from the Records page or
+-- /hb export. WoW has no file access, so the player copies the text out.
 
 local HB = ns.HB
 local SessionMath = ns.SessionMath
 local GoldLedger = ns.GoldLedger
 local GoalEval = ns.GoalEval
+local Export = ns.Export
 local Format = ns.Format
 local Theme = ns.Theme
 local W = ns.Widgets
@@ -354,6 +358,11 @@ local function buildPage(body)
   lifeTitle:SetText("Lifetime materials")
   lifeTitle:SetTextColor(Theme:Color("grey"))
 
+  ui.export = W.RedButton(ui.main, "Export", function()
+    HB:SafeCall("Records", Records.OpenExport, Records)
+  end)
+  ui.export:SetPoint("TOPRIGHT", ui.main, "TOPRIGHT", 0, -74)
+
   ui.life = W.ColumnList(ui.main, LIFE_COLUMNS)
   ui.life:SetPoint("TOPLEFT", ui.mode, "BOTTOMLEFT", 0, -4)
   ui.life:SetPoint("TOPRIGHT", ui.main, "TOPRIGHT", 0, -100)
@@ -563,6 +572,159 @@ local function buildGold(body)
   note:SetTextColor(Theme:Color("grey"))
 end
 
+---------------------------------------------------------------------------
+-- CSV export window
+---------------------------------------------------------------------------
+
+local EXPORT_OPTIONS = {
+  { value = "sessions", text = "Sessions" },
+  { value = "materials", text = "Materials" },
+  { value = "gold", text = "Gold" },
+}
+local EXPORT_HINT = "Press Ctrl+C (Cmd+C on Mac) to copy, then paste into a spreadsheet"
+local EXPORT_W, EXPORT_H = 560, 380
+local NAME_RETRIES = 5 -- seconds to wait for item names the client has not loaded
+
+local exportKind = "sessions"
+local exportWin
+
+-- Returns the CSV and whether an item name is still a placeholder. Gold uses
+-- the period chosen on the Gold page.
+local function exportText()
+  if exportKind == "materials" then
+    local pending = false
+    local text = Export.Materials(g().lifetime, function(itemID)
+      if not (C_Item and C_Item.GetItemNameByID and C_Item.GetItemNameByID(itemID)) then pending = true end
+      return itemName(itemID)
+    end)
+    return text, pending
+  elseif exportKind == "gold" then
+    local period = goldPeriod()
+    return Export.Gold(g().gold, period, function(key) return periodLabel(period, key) end)
+  end
+  return Export.Sessions(g().sessions, {
+    date = function(t) return date("%Y-%m-%d %H:%M", t) end,
+    zoneName = mapName,
+    price = HB.Pricing:Fn(),
+  })
+end
+
+local function showExportText(win, text)
+  win.text = text
+  win.edit:SetText(text)
+  win.edit:SetCursorPosition(0)
+  win.scroll:SetVerticalScroll(0)
+  win.edit:SetFocus()
+  win.edit:HighlightText()
+end
+
+-- Without retries: always redraw. A retry only redraws when a name has arrived.
+local function fillExport(win, retries)
+  local text, pending = exportText()
+  if not retries or text ~= win.text then showExportText(win, text) end
+  retries = retries or NAME_RETRIES
+  if pending and retries > 0 and C_Timer then
+    C_Timer.After(1, function()
+      if win:IsShown() then HB:SafeCall("Records", fillExport, win, retries - 1) end
+    end)
+  end
+end
+
+local function buildExportWindow()
+  local win = CreateFrame("Frame", "HarvestbookExport", UIParent, "BackdropTemplate")
+  win:Hide()
+  win:SetSize(EXPORT_W, EXPORT_H)
+  win:SetPoint("CENTER")
+  win:SetFrameStrata("DIALOG")
+  win:SetToplevel(true)
+  win:SetClampedToScreen(true)
+  win:SetMovable(true)
+  win:EnableMouse(true)
+  win:RegisterForDrag("LeftButton")
+  win:SetScript("OnDragStart", function(self) self:StartMoving() end)
+  win:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
+  HB.UI._NoLayoutCache(win)
+  Theme:Backdrop(win, "frame", "border")
+  tinsert(UISpecialFrames, "HarvestbookExport")
+
+  local title = win:CreateFontString(nil, "OVERLAY", "HarvestbookFontHeading")
+  title:SetPoint("TOPLEFT", win, "TOPLEFT", 12, -10)
+  title:SetText("Export to spreadsheet")
+
+  win.kind = W.Dropdown(win, 160, EXPORT_OPTIONS, function() return exportKind end, function(v)
+    exportKind = v
+    HB:SafeCall("Records", fillExport, win)
+  end)
+  win.kind:SetPoint("TOPLEFT", win, "TOPLEFT", 10, -34)
+
+  local bg = CreateFrame("Frame", nil, win, "BackdropTemplate")
+  bg:SetPoint("TOPLEFT", win, "TOPLEFT", 10, -66)
+  bg:SetPoint("BOTTOMRIGHT", win, "BOTTOMRIGHT", -10, 40)
+  Theme:Backdrop(bg, "content", "contentBorder")
+
+  local ok, scroll = pcall(CreateFrame, "ScrollFrame", nil, win, "UIPanelScrollFrameTemplate")
+  if not (ok and scroll) then
+    scroll = CreateFrame("ScrollFrame", nil, win)
+    scroll:EnableMouseWheel(true)
+    scroll:SetScript("OnMouseWheel", function(self, delta)
+      local y = self:GetVerticalScroll() - delta * 40
+      self:SetVerticalScroll(math.max(0, math.min(self:GetVerticalScrollRange(), y)))
+    end)
+  end
+  scroll:SetPoint("TOPLEFT", bg, "TOPLEFT", 6, -6)
+  scroll:SetPoint("BOTTOMRIGHT", bg, "BOTTOMRIGHT", -26, 6)
+  win.scroll = scroll
+
+  local edit = CreateFrame("EditBox", nil, scroll)
+  edit:SetMultiLine(true)
+  edit:SetAutoFocus(false)
+  edit:SetMaxLetters(0)
+  if edit.SetMaxBytes then edit:SetMaxBytes(0) end
+  edit:SetFontObject("HarvestbookFontSmall")
+  edit:SetSize(EXPORT_W - 52, 1) -- the box grows with its text
+  scroll:SetScrollChild(edit)
+  win.edit = edit
+
+  -- The box is for copying: any edit puts the data back.
+  edit:SetScript("OnTextChanged", function(self, userInput)
+    if userInput and self:GetText() ~= win.text then showExportText(win, win.text) end
+  end)
+  edit:SetScript("OnEscapePressed", function() win:Hide() end)
+  edit:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
+  edit:SetScript("OnMouseUp", function(self) self:HighlightText() end)
+  edit:SetScript("OnEditFocusLost", function(self) self:HighlightText(0, 0) end)
+  edit:SetScript("OnCursorChanged", function(_, _, y, _, h)
+    local top, view = scroll:GetVerticalScroll(), scroll:GetHeight()
+    if -y < top then
+      scroll:SetVerticalScroll(-y)
+    elseif -y + h > top + view then
+      scroll:SetVerticalScroll(-y + h - view)
+    end
+  end)
+  scroll:EnableMouse(true)
+  scroll:SetScript("OnMouseDown", function() edit:SetFocus() end)
+
+  local close = W.RedButton(win, "Close", function() win:Hide() end)
+  close:SetPoint("BOTTOMRIGHT", win, "BOTTOMRIGHT", -10, 10)
+
+  local hint = win:CreateFontString(nil, "OVERLAY", "HarvestbookFontSmall")
+  hint:SetPoint("LEFT", win, "BOTTOMLEFT", 12, 21)
+  hint:SetPoint("RIGHT", close, "LEFT", -8, 0)
+  hint:SetJustifyH("LEFT")
+  hint:SetText(EXPORT_HINT)
+  hint:SetTextColor(Theme:Color("grey"))
+
+  win:SetScript("OnHide", function() edit:ClearFocus() end)
+  return win
+end
+
+function Records:OpenExport()
+  exportWin = exportWin or buildExportWindow()
+  exportWin:Show()
+  exportWin.kind:Refresh()
+  fillExport(exportWin)
+end
+
 local PAGE = { id = "records", title = "Records", order = 40, build = buildPage, refresh = refreshPage }
 local GOLD_PAGE = { id = "gold", title = "Gold", order = 45, build = buildGold, refresh = refreshGold }
 
@@ -597,6 +759,7 @@ end
 
 function Records:OnDisable()
   self:UnregisterAllMessages()
+  if exportWin then exportWin:Hide() end
   HB.UI:UnregisterPage("records")
   HB.UI:UnregisterPage("gold")
 end

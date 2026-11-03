@@ -195,3 +195,15 @@ Every "Verify:" item below, by section (the original entries stay in their secti
 - [ ] Settings export string -> import on a second character restores settings
 - [ ] Resize to 700×500 and visit every page — no clipped columns or text past the window edge.
 - [ ] Angler's TackleBox installed alongside -> no conflicts, no shared globals (`/dump Harvestbook` only)
+
+## CSV export
+- [ ] Records page at 700×500: Export button sits right of "Lifetime materials", overlaps nothing, and does not cover the list below
+- [ ] Export button and `/hb export` both open the window, text highlighted and focused; Ctrl+C / Cmd+C then paste into a spreadsheet gives one row per line with correct columns
+- [ ] Dropdown switches Sessions / Materials / Gold above the window (menu not hidden behind it), and the new text is highlighted and focused
+- [ ] Gold exports the period chosen on the Gold page
+- [ ] Typing, pasting, Enter and Ctrl+X in the box all restore the data
+- [ ] Escape closes the window with the box focused and after clicking outside it; Close closes it; chat typing works afterwards
+- [ ] Window drags by its background, stays on screen, and scrolling with the wheel and scroll bar reaches the last row
+- [ ] A large history (up to 500 sessions) opens without a noticeable hang
+- [ ] A zone or item name with a comma stays in one cell; a name starting with `=` shows as text
+- [ ] Records off: `/hb export` prints the notice, an open export window closes

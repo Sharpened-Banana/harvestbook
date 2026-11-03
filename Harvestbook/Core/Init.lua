@@ -274,6 +274,7 @@ local HELP = {
   "/hb config \226\128\148 open all options",
   "/hb prices \226\128\148 refresh prices for the current session",
   "/hb shopping \226\128\148 open the shopping list",
+  "/hb export \226\128\148 copy your data as CSV for a spreadsheet",
   "/hb debug \226\128\148 toggle debug output",
   "/hb help \226\128\148 show this list",
 }
@@ -333,6 +334,13 @@ function HB:OnSlash(input)
       self.UI:ShowPage("shopping")
     else
       self:Msg("the Shopping module is disabled.")
+    end
+  elseif cmd == "export" then
+    local mod = self:GetModule("Records", true)
+    if mod and mod:IsEnabled() then
+      self:SafeCall("Records", mod.OpenExport, mod)
+    else
+      self:Msg("the Records module is disabled.")
     end
   elseif cmd == "debug" then
     local p = self.db.profile
