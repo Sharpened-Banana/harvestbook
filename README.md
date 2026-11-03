@@ -61,7 +61,15 @@ Layout under `Harvestbook/`:
 
 Design spec: `docs/superpowers/specs/2026-10-15-harvestbook-v1-design.md`.
 
-Release: `bash tools/release.sh --dry-run`, then `bash tools/release.sh --type release` (see the script header).
+### Releasing an update
+
+CurseForge project: 1780708.
+
+1. Raise `## Version` in `Harvestbook/Harvestbook.toc` and add a matching `## <version>` section to `CHANGELOG.md`.
+2. Commit to `master` and push.
+3. `bash tools/release.sh --dry-run` to check what would be sent.
+4. `bash tools/release.sh` to upload (type `upload` to confirm; `--type beta` or `--type alpha` for a test build).
+5. `git push origin v<version>` to publish the tag the script created.
 
 ## License
 
