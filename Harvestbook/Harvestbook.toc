@@ -25,6 +25,7 @@ Logic\GatherParse.lua
 Logic\Base64.lua
 Logic\GoldLedger.lua
 Logic\RouteBuilder.lua
+Logic\GearCompare.lua
 
 Core\Init.lua
 Core\Items.lua
@@ -44,5 +45,6 @@ Modules\MapPins.lua
 Modules\Records.lua
 Modules\BestSpot.lua
 Modules\Routes.lua
+Modules\GearCompare.lua
 Modules\Goals.lua
 Modules\Alarms.lua

@@ -125,6 +125,21 @@ Every "Verify:" item below, by section (the original entries stay in their secti
 - [ ] Reset all data removes the route and its pins, even when choosing "Later" on the reload prompt
 - [ ] Routes page readable at 700x500
 
+## Gear Comparison
+- [ ] Gear appears in the sidebar after Gold and in the Settings module toggles (as Gear Comparison); the sidebar still fits at 700x500
+- [ ] With no sessions, the page shows the empty message and the grey note; the dropdown offers only All zones
+- [ ] Start a session: `/dump Harvestbook.char.current.gear` shows a `sig` and your equipped profession tool and accessories (slots 20-25) with links
+- [ ] Pause and resume, or `/reload` during a session: `gear` is not replaced, even after swapping gear
+- [ ] A session with nothing in the profession slots gets an empty `sig` and shows as "No profession gear"
+- [ ] Finish a session over a minute: it appears as a row; label is the tool's name plus "+N" for the rest
+- [ ] Hover a row: the tooltip lists the set's items, and it hides on leaving the row
+- [ ] Finish sessions with two gear sets: best gold/hr is first and says "Best", the other shows a negative percent; gold/hr matches total value over total time
+- [ ] A session under a minute is not counted; sessions saved before this version show as "N sessions: no gear data"
+- [ ] Zone dropdown shows map names of zones in the data; choosing one keeps only sessions mostly gathered there, including the no gear data count
+- [ ] Delete the only session of the chosen zone in Records: the filter goes back to All zones
+- [ ] Turning the module off removes the page and new sessions get no `gear`; on again, old sets are still there. Session off also turns it off
+- [ ] Page readable at 700x500: columns not clipped, note fits on two lines, list starts below it
+
 ## Alarms (Task 18)
 - [ ] Test button plays each sound and shows text
 - [ ] Value alarm fires on a high-value node; no repeat within 2 s

@@ -13,6 +13,7 @@ Every module can be toggled in Settings. Disabling a module never deletes its da
 - **Map Pins** - world map pins for logged nodes, with gold/hr tooltips and fading for old pins; optional see-through minimap pins (off by default).
 - **Best Spot** - ranks zones and individual spots by gold/hr or other metrics; click a spot to set a waypoint.
 - **Routes** - builds a farming loop from your own node log for a zone, with numbered stops and dots on the world map and a "Next stop" waypoint button.
+- **Gear Comparison** - groups your sessions by the profession gear equipped when they started and compares gold/hr and nodes/hr, overall or within one zone.
 - **Records** - best gold/hr, longest session and most nodes, lifetime totals (per character or warband) and session history.
 - **Coiled Isle** - Neutralized Venom Clots from Venomous nodes are counted with the gather.
 - **Goals** - session goals (materials, gold, minutes) and rare-drop attempt counters.

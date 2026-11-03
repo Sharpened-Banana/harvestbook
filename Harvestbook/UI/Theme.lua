@@ -49,6 +49,7 @@ Theme.ICONS = {
   routes = "Interface\\Icons\\Ability_Hunter_Pathfinding",
   records = "Interface\\Icons\\INV_Misc_Trophy_03",
   gold = "Interface\\Icons\\INV_Misc_Coin_02",
+  gear = "Interface\\Icons\\INV_Misc_Gear_01",
   goals = "Interface\\Icons\\INV_Misc_Note_01",
   alarms = "Interface\\Icons\\INV_Misc_Bell_01",
   window = "Interface\\Icons\\INV_Misc_Spyglass_03",

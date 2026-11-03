@@ -20,6 +20,7 @@ HB.defaults = {
       Records = { enabled = true },
       BestSpot = { enabled = true },
       Routes = { enabled = true },
+      GearCompare = { enabled = true },
       Goals = { enabled = true },
       Alarms = { enabled = true },
     },
