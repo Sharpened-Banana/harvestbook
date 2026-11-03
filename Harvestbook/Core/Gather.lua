@@ -15,9 +15,10 @@ local ADDON, ns = ...
 --     lines are aggregated and fired once CHAT_WAIT s later (objectID/npcID nil).
 --     Lines are buffered from the cast onward, because with instant auto-loot
 --     they arrive before the LOOT_WAIT timeout expires.
---   CHAT_MSG_LOOT of a GatherParse.BONUS_ITEMS item within BONUS_WINDOW s of
---     the last fired gather -> HB_BONUS_LOOT { time, kind, mapID, x, y, items }
---     (loot pushed after the gather, e.g. Neutralized Venom Clot; never a node).
+--   CHAT_MSG_LOOT of a GatherParse.BONUS_ITEMS item -> HB_BONUS_LOOT
+--     { time, kind, mapID, x, y, items, bonus } (loot pushed outside a loot
+--     window, e.g. Neutralized Venom Clot; never a node; kind and position come
+--     from the last gather in this zone, else kind is nil).
 
 local HB = ns.HB
 local GatherParse = ns.GatherParse
@@ -373,15 +374,16 @@ function Gather:LOOT_CLOSED(event)
   fire(p)
 end
 
--- A bonus item counts as loot of the last gather, even while a new cast is
--- pending (its puddle can be reached after the next node is started).
+-- Handled before the pending gather so it never joins the next node's loot (its
+-- puddle can be reached after that node is started).
 local function fireBonus(link, count)
   local items = {}
   addItem(items, link, count)
   if #items == 0 then return end
+  local mapID, x, y = playerPosition()
+  local kind = lastGather and lastGather.mapID == mapID and lastGather.kind or nil
   local payload = {
-    time = time(), kind = lastGather.kind,
-    mapID = lastGather.mapID, x = lastGather.x, y = lastGather.y,
+    time = time(), kind = kind, mapID = mapID, x = x, y = y,
     items = items, bonus = true,
   }
   if debugOn() then
@@ -399,10 +401,14 @@ function Gather:PLAYER_ENTERING_WORLD()
 end
 
 function Gather:CHAT_MSG_LOOT(event, text)
-  if secret(text) or type(text) ~= "string" then return end
+  if secret(text) then
+    if debugOn() then HB:Msg("loot line hidden by the game (secret); not counted") end
+    return
+  end
+  if type(text) ~= "string" then return end
   local link, count = parseLootLine(text, getChatPatterns())
   if not link then return end
-  if lastGather and GatherParse.IsBonusLoot(itemIDFromLink(link), time(), lastGather.time) then
+  if GatherParse.IsBonusItem(itemIDFromLink(link)) then
     fireBonus(link, count)
     return
   end

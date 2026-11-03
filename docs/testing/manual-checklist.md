@@ -77,7 +77,10 @@ Every "Verify:" item below, by section (the original entries stay in their secti
 ## Venom Clots (Coiled Isle, 12.1)
 - [ ] During a Curse Surge, gather a Venomous node, then run into a green puddle → Neutralized Venom Clot appears in the Session materials with its value; the node count does not go up again
 - [ ] With `/hb debug` on, the chat shows `HB_BONUS_LOOT ... item=274777`
-- [ ] **Verify:** the clot arrives as a "You receive item" loot line (LOOT_ITEM_PUSHED_SELF) within 3 min of the gather; if it arrives later, raise GatherParse.BONUS_WINDOW
+- [ ] Farm only Venomous nodes and puddles for 5+ minutes with no other gathers → every clot counts and no session ends early
+- [ ] With no session running, a clot starts one
+- [ ] **Verify:** with `/hb debug`, note what a Venomous node prints: if `gather (herb) dropped: no items`, these nodes aren't in node counts
+- [ ] **Verify:** `/hb debug` never prints `loot line hidden by the game`; if it does, chat loot lines can't be relied on
 - [ ] **Verify:** Overload Infused Deposit / Herb on a Cursed node is counted (it may use an item spell Harvestbook does not recognise yet)
 
 ## Map Pins (Task 14)

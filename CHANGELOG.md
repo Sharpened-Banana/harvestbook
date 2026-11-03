@@ -20,6 +20,7 @@ Fixed:
 - Gather detection no longer depends on spell names being loaded at your first cast.
 - Goal boxes reject values like `1e5` and accept `250k` or `5m` for gold.
 - Deleting a session recalculates any record it held.
+- Neutralized Venom Clots are always counted, even during pure venom farming with no other gathers nearby, and one can start a session.
 - Neutralized Venom Clots no longer count as extra nodes in zone stats. Sessions saved before this update keep their old counts.
 - The sidebar fits the smallest window size.
 

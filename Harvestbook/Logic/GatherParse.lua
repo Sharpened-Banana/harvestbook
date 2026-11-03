@@ -9,21 +9,17 @@ M.KNOWN_SPELLS = {
   [8613] = "skin",
 }
 
--- Items the game pushes into the bags a while after a gather, outside the
--- node's loot window. They count as loot of the last gather (not a new node).
+-- Items the game pushes into the bags outside a node's loot window. They count
+-- as gathered loot whenever they arrive, but never as a node.
 --   274777 Neutralized Venom Clot: a Venomous node on the Coiled Isle (12.1)
---          leaves venom puddles; running into one pushes the clot.
+--          leaves venom puddles; running into one pushes the clot. The node
+--          itself shows up as no gather, so no recent gather can be required.
 M.BONUS_ITEMS = {
   [274777] = true,
 }
-M.BONUS_WINDOW = 180 -- seconds after the last gather
 
--- True when itemID is a bonus item received within the window of a gather at lastTime.
-function M.IsBonusLoot(itemID, now, lastTime)
-  if not (itemID and M.BONUS_ITEMS[itemID]) then return false end
-  if type(lastTime) ~= "number" or type(now) ~= "number" then return false end
-  local age = now - lastTime
-  return age >= 0 and age <= M.BONUS_WINDOW
+function M.IsBonusItem(itemID)
+  return itemID ~= nil and M.BONUS_ITEMS[itemID] == true
 end
 
 -- "Type-0-server-instance-zoneUID-ID-spawnUID" -> type, numeric ID (6th field).

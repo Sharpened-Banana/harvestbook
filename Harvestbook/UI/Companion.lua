@@ -316,9 +316,11 @@ function UI:OnCompanionProfileChanged()
 end
 
 function UI:InitCompanion()
-  self:RegisterMessage("HB_NODE_GATHERED", function()
+  local function autoShow()
     if db().autoShow and not db().shown then UI:SetCompanionShown(true, true) end
-  end)
+  end
+  self:RegisterMessage("HB_NODE_GATHERED", autoShow)
+  self:RegisterMessage("HB_BONUS_LOOT", autoShow)
   self:RegisterMessage("HB_SESSION_CHANGED", function(_, state, session)
     if state == "stopped" or session == nil then
       sessionActive = false

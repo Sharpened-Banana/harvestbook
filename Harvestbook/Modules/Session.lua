@@ -390,12 +390,16 @@ function Session:OnGather(payload)
   refreshAll()
 end
 
--- Loot pushed after a gather (HB_BONUS_LOOT): materials and value only, not
--- a node, and it never starts a session.
+-- Loot pushed outside a loot window (HB_BONUS_LOOT): materials and value only,
+-- not a node. It starts a session like a gather does, so a stretch of pure venom
+-- farming is tracked.
 function Session:OnBonusLoot(payload)
   if type(payload) ~= "table" then return end
   local s = cur()
-  if not s then return end
+  if not s then
+    if not profile().session.autoStart then return end
+    s = startNew()
+  end
   local fn = priceFn()
   if not SessionMath.AddGather(s, { mapID = payload.mapID, items = payload.items }, time(), fn) then return end
   logGather(payload, fn)
@@ -781,7 +785,8 @@ local function refreshLogTab(f)
     if e then
       local item = e.item
       local text = item and (itemName(item.itemID, item.link) .. qualityMarkup(item, 12) .. " x" .. (item.count or 0)) or ""
-      setIconRow(r, Theme.ICONS[e.kind], text, date("%H:%M", e.time))
+      local icon = Theme.ICONS[e.kind] or (item and itemIcon(item.itemID))
+      setIconRow(r, icon, text, date("%H:%M", e.time))
     else
       setIconRow(r, nil)
     end
