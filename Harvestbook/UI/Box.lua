@@ -291,17 +291,32 @@ local function sortPages()
   end)
 end
 
+-- Buttons shrink below BUTTON_H when the pages wouldn't fit the window's height.
+local function layoutSidebar()
+  local sidebar = box.sidebar
+  local shownCount = math.max(#sorted, 1)
+  local fit = math.floor((sidebar:GetHeight() + BUTTON_GAP) / shownCount) - BUTTON_GAP
+  local h = fit > 0 and math.min(BUTTON_H, fit) or BUTTON_H
+  for i, btn in ipairs(sidebar.buttons) do
+    btn:ClearAllPoints()
+    btn:SetPoint("TOPLEFT", sidebar, "TOPLEFT", 0, -(i - 1) * (h + BUTTON_GAP))
+    btn:SetPoint("RIGHT", sidebar, "RIGHT", 0, 0)
+    btn:SetHeight(h)
+  end
+end
+
 function UI:RebuildSidebar()
   sortPages()
   if not box then return end
   local sidebar = box.sidebar
+  if not sidebar.layoutHooked then
+    sidebar.layoutHooked = true
+    sidebar:HookScript("OnSizeChanged", layoutSidebar) -- BackdropTemplate uses this script too
+  end
   for i, p in ipairs(sorted) do
     local btn = sidebar.buttons[i]
     if not btn then
       btn = W.SidebarButton(sidebar, nil, "")
-      btn:SetPoint("TOPLEFT", sidebar, "TOPLEFT", 0, -(i - 1) * (BUTTON_H + BUTTON_GAP))
-      btn:SetPoint("RIGHT", sidebar, "RIGHT", 0, 0)
-      btn:SetHeight(BUTTON_H)
       btn:SetScript("OnClick", function(self) UI:ShowPage(self.pageID) end)
       sidebar.buttons[i] = btn
     end
@@ -314,6 +329,7 @@ function UI:RebuildSidebar()
   for i = #sorted + 1, #sidebar.buttons do
     sidebar.buttons[i]:Hide()
   end
+  layoutSidebar()
 end
 
 ---------------------------------------------------------------------------

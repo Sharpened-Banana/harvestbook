@@ -65,6 +65,8 @@ local function dominant(spot)
   return best
 end
 
+M.Dominant = dominant
+
 local function sum(t)
   local s = 0
   for _, v in pairs(t) do s = s + v end

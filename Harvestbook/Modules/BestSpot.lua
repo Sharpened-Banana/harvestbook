@@ -119,16 +119,7 @@ local function openMap(mapID)
 end
 
 local function setWaypoint(mapID, x, y)
-  if not (mapID and x and y and C_Map and C_Map.SetUserWaypoint and UiMapPoint) then return end
-  if C_Map.CanSetUserWaypointOnMap and not C_Map.CanSetUserWaypointOnMap(mapID) then
-    HB:Msg("Can't place a waypoint on this map.")
-    return
-  end
-  C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(mapID, x, y))
-  if C_SuperTrack and C_SuperTrack.SetSuperTrackedUserWaypoint then
-    C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-  end
-  openMap(mapID)
+  if HB:SetWaypoint(mapID, x, y) then openMap(mapID) end
 end
 
 ---------------------------------------------------------------------------

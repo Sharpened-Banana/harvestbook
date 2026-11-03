@@ -92,6 +92,16 @@ describe("NodeGrid", function()
     assert.are.equal(0, rows[2].valuePerNode)
   end)
 
+  it("Dominant returns the most-gathered node, ties to the lowest id", function()
+    local zone = {}
+    local key = G.Record(zone, gather({ objectID = 5 }), 0)
+    assert.are.equal(5, G.Dominant(zone[key]))
+    G.Record(zone, gather({ objectID = 3 }), 0)
+    assert.are.equal(3, G.Dominant(zone[key]))
+    G.Record(zone, gather({ objectID = 5 }), 0)
+    assert.are.equal(5, G.Dominant(zone[key]))
+  end)
+
   it("Summarize skips imported cells", function()
     local zone = {}
     G.ImportPoint(zone, 0.3, 0.3, "ore")

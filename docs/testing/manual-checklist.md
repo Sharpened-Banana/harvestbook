@@ -109,6 +109,22 @@ Every "Verify:" item below, by section (the original entries stay in their secti
 - [ ] Best Spot readable at 700×500
 - [ ] **Verify:** ColumnList renders `|cff9d9d9d` color escapes in cells; Format.Money output also greys with them
 
+## Routes
+- [ ] Routes appears in the sidebar under Best Spot and in the Settings module toggles; the sidebar still fits at 700x500
+- [ ] Pager opens on the current zone; after paging it stays put across a zone change, otherwise it follows the player
+- [ ] Herbs / Ore / Skinning and Minimum gathers change which spots Build uses; no match prints a chat notice and keeps the current route
+- [ ] Build shows the stop count and the stops in order (number, node name, gathers); at most 30 stops
+- [ ] World map shows numbered stops and small dots along every leg, including the leg back to stop 1; no pins on the minimap
+- [ ] **Verify:** stop numbers draw above Map Pins at the same position, and Map Pins tooltips and shift-right-click still work through route pins and dots
+- [ ] **Verify:** `Ability_Hunter_Pathfinding` icon shows in the sidebar
+- [ ] Next stop sets a waypoint on stop 1, then 2, and wraps to 1 after the last; the map does not open; status line shows the stop
+- [ ] Route and waypoint position survive /reload; pins are back without opening the page
+- [ ] `/run HarvestbookCharDB.route = "junk"` then /reload shows no route and no error
+- [ ] Clear route removes all route pins; Map Pins stay
+- [ ] Turning Routes off removes its pins and page; on again restores the route. Node Log off also turns Routes off
+- [ ] Reset all data removes the route and its pins, even when choosing "Later" on the reload prompt
+- [ ] Routes page readable at 700x500
+
 ## Alarms (Task 18)
 - [ ] Test button plays each sound and shows text
 - [ ] Value alarm fires on a high-value node; no repeat within 2 s

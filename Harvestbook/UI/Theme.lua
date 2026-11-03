@@ -46,6 +46,7 @@ Theme.ICONS = {
   session = "Interface\\Icons\\INV_Misc_PocketWatch_01",
   nodelog = "Interface\\Icons\\INV_Misc_Book_09",
   bestspot = "Interface\\Icons\\INV_Misc_Map_01",
+  routes = "Interface\\Icons\\Ability_Hunter_Pathfinding",
   records = "Interface\\Icons\\INV_Misc_Trophy_03",
   gold = "Interface\\Icons\\INV_Misc_Coin_02",
   goals = "Interface\\Icons\\INV_Misc_Note_01",

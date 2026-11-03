@@ -10,11 +10,12 @@ Harvestbook = HB
 local PREFIX = "|cffffd100Harvestbook|r: "
 
 -- Dependencies first, dependents after (used for enable/disable ordering).
-HB.MODULE_ORDER = { "Session", "NodeLog", "Records", "MapPins", "BestSpot", "Goals", "Alarms" }
+HB.MODULE_ORDER = { "Session", "NodeLog", "Records", "MapPins", "BestSpot", "Routes", "Goals", "Alarms" }
 
 HB.DEPENDS = {
   MapPins = { "NodeLog" },
   BestSpot = { "NodeLog", "Records" },
+  Routes = { "NodeLog" },
   Records = { "Session" },
   Goals = { "Session" },
   Alarms = { "Session" },
@@ -22,7 +23,7 @@ HB.DEPENDS = {
 
 HB.MODULE_LABELS = {
   Session = "Session", NodeLog = "Node Log", Records = "Records", MapPins = "Map Pins",
-  BestSpot = "Best Spot", Goals = "Goals", Alarms = "Alarms",
+  BestSpot = "Best Spot", Routes = "Routes", Goals = "Goals", Alarms = "Alarms",
 }
 
 local function label(name)
@@ -72,6 +73,22 @@ function HB:Listen(module, message, handler)
   module:RegisterMessage(message, function(_, ...)
     HB:SafeCall(module:GetName(), handler, module, ...)
   end)
+end
+
+-- Map waypoint ----------------------------------------------------------------
+
+-- Sets and super-tracks a map waypoint. Returns true if it was set.
+function HB:SetWaypoint(mapID, x, y)
+  if not (mapID and x and y and C_Map and C_Map.SetUserWaypoint and UiMapPoint) then return false end
+  if C_Map.CanSetUserWaypointOnMap and not C_Map.CanSetUserWaypointOnMap(mapID) then
+    self:Msg("Can't place a waypoint on this map.")
+    return false
+  end
+  C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(mapID, x, y))
+  if C_SuperTrack and C_SuperTrack.SetSuperTrackedUserWaypoint then
+    C_SuperTrack.SetSuperTrackedUserWaypoint(true)
+  end
+  return true
 end
 
 -- Module enable state ---------------------------------------------------------

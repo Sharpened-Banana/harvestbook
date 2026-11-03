@@ -19,6 +19,7 @@ HB.defaults = {
       MapPins = { enabled = true },
       Records = { enabled = true },
       BestSpot = { enabled = true },
+      Routes = { enabled = true },
       Goals = { enabled = true },
       Alarms = { enabled = true },
     },
@@ -45,6 +46,7 @@ HB.defaults = {
     goals = { list = {} },
     minimap = { hide = false },
     bestspot = { scope = "zones", metric = "gph" },
+    routes = { kinds = { herb = true, ore = true, skin = true }, minGathers = 1 },
     goldStyle = "auto",
     goldPeriod = "day", -- "day" | "daily" | "weekly" (Gold page)
     debug = false,

@@ -24,6 +24,7 @@ Logic\Migrate.lua
 Logic\GatherParse.lua
 Logic\Base64.lua
 Logic\GoldLedger.lua
+Logic\RouteBuilder.lua
 
 Core\Init.lua
 Core\Items.lua
@@ -42,5 +43,6 @@ Modules\NodeLog.lua
 Modules\MapPins.lua
 Modules\Records.lua
 Modules\BestSpot.lua
+Modules\Routes.lua
 Modules\Goals.lua
 Modules\Alarms.lua
