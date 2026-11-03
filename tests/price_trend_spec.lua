@@ -417,3 +417,13 @@ describe("PriceTrend.ChartPoints", function()
     assert.is_nil(hi)
   end)
 end)
+
+describe("PriceTrend.NeedsPrune", function()
+  it("is true only over a cap", function()
+    local all = { a = { d1 = 1, d2 = 1 }, b = { d1 = 1 } }
+    assert.is_false(T.NeedsPrune(all, "a", 2, 2))
+    assert.is_true(T.NeedsPrune(all, "a", 1, 2))
+    assert.is_true(T.NeedsPrune(all, "b", 2, 1))
+    assert.is_false(T.NeedsPrune(all, "missing", 2, 2))
+  end)
+end)

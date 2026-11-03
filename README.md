@@ -2,7 +2,7 @@
 
 An all-in-one gathering addon for World of Warcraft Retail (12.1.x) covering herbalism, mining and skinning. Its window is modelled on Angler's TackleBox: one tabbed box plus an optional small companion window.
 
-**Status:** 1.0.0 - first release; report problems with `/hb debug` output.
+**Status:** 1.1.0 - report problems with `/hb debug` output.
 
 ## Features
 

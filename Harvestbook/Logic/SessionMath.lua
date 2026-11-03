@@ -163,7 +163,8 @@ function M.AddGather(s, gather, now, priceFn)
     s.zoneAtLast = z
   end
   if mapID then
-    s.zones[mapID] = (s.zones[mapID] or 0) + 1
+    -- zones counts nodes; bonus loot (no kind) only adds value.
+    if gather.kind then s.zones[mapID] = (s.zones[mapID] or 0) + 1 end
     s.zoneCopper[mapID] = (s.zoneCopper[mapID] or 0) + M.NodeValue(gather, priceFn)
   end
   return true

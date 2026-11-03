@@ -42,8 +42,10 @@ Theme.COLORS = {
 }
 
 Theme.FONTS = { title = "Fonts\\MORPHEUS.TTF", body = "Fonts\\FRIZQT__.TTF" }
--- These two lack Cyrillic on some clients; the game's own font always covers its language.
-if GetLocale and GetLocale() == "ruRU" and STANDARD_TEXT_FONT then
+-- These two lack Cyrillic and CJK on some clients (item and zone names are in the
+-- client's language even where the UI is English); the game's own font covers it.
+local NEEDS_GAME_FONT = { ruRU = true, koKR = true, zhCN = true, zhTW = true }
+if GetLocale and NEEDS_GAME_FONT[GetLocale()] and STANDARD_TEXT_FONT then
   Theme.FONTS.title, Theme.FONTS.body = STANDARD_TEXT_FONT, STANDARD_TEXT_FONT
 end
 

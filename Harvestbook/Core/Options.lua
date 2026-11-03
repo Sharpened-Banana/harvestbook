@@ -270,6 +270,7 @@ local function resetAllData()
     if k ~= "schemaVersion" then g[k] = nil end
   end
   for k, v in pairs(HB.defaults.global) do g[k] = deepcopy(v) end
+  g.gold.backfilled = true -- nothing left to count; a reload must not recount new sessions
   if HB.char then HB.char.route = nil end -- before the reset: Routes redraws on it
   HB.db:ResetProfile()
   if HB.char then

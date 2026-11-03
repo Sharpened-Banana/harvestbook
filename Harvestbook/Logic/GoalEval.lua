@@ -26,7 +26,15 @@ end
 -- positive whole number or nil. allowSuffix = false rejects k / m and decimals.
 function M.ParseTarget(text, allowSuffix)
   if type(text) ~= "string" then return nil end
-  text = text:gsub("[%s,]", ""):lower()
+  text = text:gsub("%s", ""):lower()
+  -- A comma must group thousands: "2,5m" is a decimal comma, not 25 million.
+  local whole, rest = text:match("^([%d,]+)(.*)$")
+  if whole and whole:find(",", 1, true) then
+    local head, n = whole, 1
+    while n > 0 do head, n = head:gsub(",%d%d%d$", "") end
+    if not head:match("^%d%d?%d?$") then return nil end
+    text = whole:gsub(",", "") .. rest
+  end
   local digits, suffix = text:match("^([%d%.]+)([km]?)$")
   if not digits or (suffix ~= "" and allowSuffix == false) then return nil end
   if not (digits:match("^%d+$") or (digits:match("^%d+%.%d+$") and suffix ~= "")) then return nil end

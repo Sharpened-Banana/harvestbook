@@ -109,7 +109,17 @@ Every "Verify:" item below, by section (the original entries stay in their secti
 - [ ] Best Spot readable at 700×500
 - [ ] **Verify:** ColumnList renders `|cff9d9d9d` color escapes in cells; Format.Money output also greys with them
 
+## Gold page
+- [ ] First load after updating: all-time gold equals your saved sessions' value; another /reload doesn't raise it
+- [ ] Gather a node → all-time total and "This day" rise by its value, on any character
+- [ ] Type `5m`, press Set goal → bar shows 5,000,000g; `2,5m` and `1e5` are refused with a chat message; Clear removes the bar
+- [ ] Set a goal just above the total, gather past it → the goal alarm fires once
+- [ ] Switch Per day / Per daily reset / Per weekly reset → lines and list change; the choice survives /reload
+- [ ] **Verify:** `C_DateAndTime.GetSecondsUntilDailyReset` / `GetSecondsUntilWeeklyReset` work: the reset rows show after a gather
+- [ ] Settings → Reset all data → Later, gather, then /reload → the total counts that gather once, not twice
+
 ## Routes
+- [ ] **Verify:** route stops and dots draw correctly on the maximised world map and when zoomed in (they use fixed frame strata): dots aren't hidden, stops don't float outside the map
 - [ ] Routes appears in the sidebar under Best Spot and in the Settings module toggles; the sidebar still fits at 700x500
 - [ ] Pager opens on the current zone; after paging it stays put across a zone change, otherwise it follows the player
 - [ ] Herbs / Ore / Skinning and Minimum gathers change which spots Build uses; no match prints a chat notice and keeps the current route

@@ -27,6 +27,7 @@ function W.SidebarButton(parent, icon, label)
   Theme:Backdrop(btn, "parchment", "parchmentBorder")
 
   local iconBorder = btn:CreateTexture(nil, "ARTWORK", nil, 1)
+  btn.iconBorder = iconBorder
   iconBorder:SetTexture(WHITE)
   iconBorder:SetVertexColor(0, 0, 0, 0.85)
   iconBorder:SetSize(34, 34)

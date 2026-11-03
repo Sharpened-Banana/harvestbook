@@ -73,6 +73,17 @@ local function sortedDays(days)
   return list
 end
 
+-- Whether this item or the whole history is over its cap (cheap: call per gather).
+function M.NeedsPrune(all, itemKey, maxDays, maxItems)
+  maxDays, maxItems = maxDays or M.MAX_DAYS, maxItems or M.MAX_ITEMS
+  local n = 0
+  for _ in pairs(all[itemKey] or {}) do n = n + 1 end
+  if n > maxDays then return true end
+  n = 0
+  for _ in pairs(all) do n = n + 1 end
+  return n > maxItems
+end
+
 -- In place: at most maxDays per item (oldest dropped), then at most maxItems
 -- (items with the oldest latest entry dropped; ties drop the later key).
 -- Invalid days and items left empty are removed.

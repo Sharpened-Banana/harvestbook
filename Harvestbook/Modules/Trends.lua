@@ -55,7 +55,7 @@ local function recordItem(history, priceFn, it)
   local key = ns.SessionMath.ItemKey(it.itemID, it.quality)
   local day = date(DAY_FORMAT, cached.time or time())
   local isNew = Trend.Record(history, key, day, cached.value)
-  if isNew then Trend.Prune(history) end
+  if isNew and Trend.NeedsPrune(history, key) then Trend.Prune(history) end
   return true
 end
 
@@ -298,6 +298,7 @@ end
 local PAGE = { id = "trends", title = L["Trends"], order = 48, build = buildPage, refresh = refreshPage }
 
 function Trends:OnEnable()
+  Trend.Prune(HB.db.global.priceHistory)
   HB:Listen(self, "HB_NODE_GATHERED", onLoot)
   HB:Listen(self, "HB_BONUS_LOOT", onLoot)
   PAGE.icon = Theme.ICONS and Theme.ICONS.trends

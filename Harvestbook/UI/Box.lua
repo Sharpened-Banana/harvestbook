@@ -303,6 +303,11 @@ local function layoutSidebar()
     btn:SetPoint("TOPLEFT", sidebar, "TOPLEFT", 0, -(i - 1) * (h + BUTTON_GAP))
     btn:SetPoint("RIGHT", sidebar, "RIGHT", 0, 0)
     btn:SetHeight(h)
+    if btn.iconBorder then
+      local size = math.min(34, h - 2)
+      btn.iconBorder:SetSize(size, size)
+      btn.icon:SetSize(size - 2, size - 2)
+    end
   end
 end
 
@@ -640,7 +645,7 @@ local function buildSettingsPage(body)
     cb.hint:SetPoint("LEFT", cb, "LEFT", 170, 0)
     cb.hint:SetTextColor(Theme:Color("grey"))
     body.switches[#body.switches + 1] = cb
-    y = y + 28
+    y = y + 24 -- 11 modules must leave room for the button at the 700x500 minimum
   end
 
   local note = body:CreateFontString(nil, "OVERLAY", "HarvestbookFontSmall")
